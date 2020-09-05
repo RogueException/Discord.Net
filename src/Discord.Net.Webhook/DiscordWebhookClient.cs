@@ -85,22 +85,96 @@ namespace Discord.Webhook
         }
         private static API.DiscordRestApiClient CreateApiClient(DiscordRestConfig config)
             => new API.DiscordRestApiClient(config.RestClientProvider, DiscordRestConfig.UserAgent);
-        /// <summary> Sends a message to the channel for this webhook. </summary>
-        /// <returns> Returns the ID of the created message. </returns>
+
+        /// <summary>
+        ///     Sends a message to the channel for this webhook.
+        /// </summary>
+        /// <param name="text">The message to be sent.</param>
+        /// <param name="isTTS">Determines whether the message should be read aloud by Discord or not.</param>
+        /// <param name="embeds">The <see cref="Discord.EmbedType.Rich"/> <see cref="Embed"/>s to be sent.</param>
+        /// <param name="username">The username the webhook will display on this message.</param>
+        /// <param name="avatarUrl">The url to the avatar the webhook will display on this message.</param>
+        /// <param name="options">The options to be used when sending the request.</param>
+        /// <returns>
+        ///     Returns the ID of the created message.
+        /// </returns>
         public Task<ulong> SendMessageAsync(string text = null, bool isTTS = false, IEnumerable<Embed> embeds = null,
             string username = null, string avatarUrl = null, RequestOptions options = null)
             => WebhookClientHelper.SendMessageAsync(this, text, isTTS, embeds, username, avatarUrl, options);
 
-        /// <summary> Sends a message to the channel for this webhook with an attachment. </summary>
-        /// <returns> Returns the ID of the created message. </returns>
+        /// <summary>
+        ///     Sends a message to the channel for this webhook with an attachment.
+        /// </summary>
+        /// <param name="filePath">The file path of the file.</param>
+        /// <param name="text">The message to be sent.</param>
+        /// <param name="isTTS">Determines whether the message should be read aloud by Discord or not.</param>
+        /// <param name="embeds">The <see cref="Discord.EmbedType.Rich"/> <see cref="Embed"/>s to be sent.</param>
+        /// <param name="username">The username the webhook will display on this message.</param>
+        /// <param name="avatarUrl">The url to the avatar the webhook will display on this message.</param>
+        /// <param name="isSpoiler">Whether the message attachment should be hidden as a spoiler.</param>
+        /// <param name="options">The options to be used when sending the request.</param>
+        /// <returns>
+        ///     Returns the ID of the created message.
+        /// </returns>
         public Task<ulong> SendFileAsync(string filePath, string text, bool isTTS = false,
             IEnumerable<Embed> embeds = null, string username = null, string avatarUrl = null, RequestOptions options = null, bool isSpoiler = false)
             => WebhookClientHelper.SendFileAsync(this, filePath, text, isTTS, embeds, username, avatarUrl, options, isSpoiler);
-        /// <summary> Sends a message to the channel for this webhook with an attachment. </summary>
-        /// <returns> Returns the ID of the created message. </returns>
+
+        /// <summary>
+        ///     Sends a message to the channel for this webhook with an attachment.
+        /// </summary>
+        /// <param name="stream">The stream of the file to be sent.</param>
+        /// <param name="filename">The name of the file to be sent.</param>
+        /// <param name="text">The message to be sent.</param>
+        /// <param name="isTTS">Determines whether the message should be read aloud by Discord or not.</param>
+        /// <param name="embeds">The <see cref="Discord.EmbedType.Rich"/> <see cref="Embed"/>s to be sent.</param>
+        /// <param name="username">The username the webhook will display on this message.</param>
+        /// <param name="avatarUrl">The url to the avatar the webhook will display on this message.</param>
+        /// <param name="isSpoiler">Whether the message attachment should be hidden as a spoiler.</param>
+        /// <param name="options">The options to be used when sending the request.</param>
+        /// <returns>
+        ///     Returns the ID of the created message.
+        /// </returns>
         public Task<ulong> SendFileAsync(Stream stream, string filename, string text, bool isTTS = false,
             IEnumerable<Embed> embeds = null, string username = null, string avatarUrl = null, RequestOptions options = null, bool isSpoiler = false)
             => WebhookClientHelper.SendFileAsync(this, stream, filename, text, isTTS, embeds, username, avatarUrl, options, isSpoiler);
+
+        /// <summary>
+        ///     Sends a message to the channel for this webhook with multiple attachments.
+        /// </summary>
+        /// <param name="filePaths">The <see cref="IEnumerable{T}"/> of file paths of the files.</param>
+        /// <param name="text">The message to be sent.</param>
+        /// <param name="isTTS">Determines whether the message should be read aloud by Discord or not.</param>
+        /// <param name="embeds">The <see cref="Discord.EmbedType.Rich"/> <see cref="Embed"/>s to be sent.</param>
+        /// <param name="username">The username the webhook will display on this message.</param>
+        /// <param name="avatarUrl">The url to the avatar the webhook will display on this message.</param>
+        /// <param name="isSpoiler">Whether the message attachment should be hidden as a spoiler.</param>
+        /// <param name="options">The options to be used when sending the request.</param>
+        /// <returns>
+        ///     Returns the ID of the created message.
+        /// </returns>
+        public Task<ulong> SendFileAsync(IEnumerable<string> filePaths, string text, bool isTTS = false,
+            IEnumerable<Embed> embeds = null, string username = null, string avatarUrl = null, RequestOptions options = null, bool isSpoiler = false)
+            => WebhookClientHelper.SendFileAsync(this, filePaths, text, isTTS, embeds, username, avatarUrl, options, isSpoiler);
+
+        /// <summary>
+        ///     Sends a message to the channel for this webhook with multiple attachments.
+        /// </summary>
+        /// <param name="streams">The <see cref="IEnumerable{T}"/> of <see cref="KeyValuePair{TKey, TValue}"/>
+        /// that are the filename and stream for each file.</param>
+        /// <param name="text">The message to be sent.</param>
+        /// <param name="isTTS">Determines whether the message should be read aloud by Discord or not.</param>
+        /// <param name="embeds">The <see cref="Discord.EmbedType.Rich"/> <see cref="Embed"/>s to be sent.</param>
+        /// <param name="username">The username the webhook will display on this message.</param>
+        /// <param name="avatarUrl">The url to the avatar the webhook will display on this message.</param>
+        /// <param name="isSpoiler">Whether the message attachment should be hidden as a spoiler.</param>
+        /// <param name="options">The options to be used when sending the request.</param>
+        /// <returns>
+        ///     Returns the ID of the created message.
+        /// </returns>
+        public Task<ulong> SendFileAsync(IEnumerable<KeyValuePair<string, Stream>> streams, string text, bool isTTS = false,
+            IEnumerable<Embed> embeds = null, string username = null, string avatarUrl = null, RequestOptions options = null, bool isSpoiler = false)
+            => WebhookClientHelper.SendFileAsync(this, streams, text, isTTS, embeds, username, avatarUrl, options, isSpoiler);
 
         /// <summary> Modifies the properties of this webhook. </summary>
         public Task ModifyWebhookAsync(Action<WebhookProperties> func, RequestOptions options = null)

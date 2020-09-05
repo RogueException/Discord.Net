@@ -41,10 +41,24 @@ namespace Discord.Webhook
             using (var file = File.OpenRead(filePath))
                 return await SendFileAsync(client, file, filename, text, isTTS, embeds, username, avatarUrl, options, isSpoiler).ConfigureAwait(false);
         }
+        public static async Task<ulong> SendFileAsync(DiscordWebhookClient client, IEnumerable<string> filePaths, string text, bool isTTS,
+            IEnumerable<Embed> embeds, string username, string avatarUrl, RequestOptions options, bool isSpoiler)
+        {
+            var files = filePaths.Select(x => new KeyValuePair<string, Stream>(Path.GetFileName(x), File.OpenRead(x)));
+            var id = await SendFileAsync(client, files, text, isTTS, embeds, username, avatarUrl, options, isSpoiler).ConfigureAwait(false);
+            foreach (var file in files)
+                file.Value.Dispose();
+            return id;
+        }
         public static async Task<ulong> SendFileAsync(DiscordWebhookClient client, Stream stream, string filename, string text, bool isTTS,
             IEnumerable<Embed> embeds, string username, string avatarUrl, RequestOptions options, bool isSpoiler)
         {
-            var args = new UploadWebhookFileParams(stream) { Filename = filename, Content = text, IsTTS = isTTS, IsSpoiler = isSpoiler };
+            return await SendFileAsync(client, new[] { new KeyValuePair<string, Stream>(filename, stream) }, text, isTTS, embeds, username, avatarUrl, options, isSpoiler).ConfigureAwait(false);
+        }
+        public static async Task<ulong> SendFileAsync(DiscordWebhookClient client, IEnumerable<KeyValuePair<string, Stream>> files, string text, bool isTTS,
+            IEnumerable<Embed> embeds, string username, string avatarUrl, RequestOptions options, bool isSpoiler)
+        {
+            var args = new UploadWebhookFileParams(files) { Content = text, IsTTS = isTTS, IsSpoiler = isSpoiler };
             if (username != null)
                 args.Username = username;
             if (avatarUrl != null)

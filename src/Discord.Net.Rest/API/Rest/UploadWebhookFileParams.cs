@@ -12,9 +12,8 @@ namespace Discord.API.Rest
     {
         private static JsonSerializer _serializer = new JsonSerializer { ContractResolver = new DiscordContractResolver() };
 
-        public Stream File { get; }
+        public IEnumerable<KeyValuePair<string, Stream>> Files { get; }
 
-        public Optional<string> Filename { get; set; }
         public Optional<string> Content { get; set; }
         public Optional<string> Nonce { get; set; }
         public Optional<bool> IsTTS { get; set; }
@@ -24,19 +23,23 @@ namespace Discord.API.Rest
 
         public bool IsSpoiler { get; set; } = false;
 
-        public UploadWebhookFileParams(Stream file)
+        public UploadWebhookFileParams(IEnumerable<KeyValuePair<string, Stream>> files)
         {
-            File = file;
+            Files = files;
         }
 
         public IReadOnlyDictionary<string, object> ToDictionary()
         {
             var d = new Dictionary<string, object>();
-            var filename = Filename.GetValueOrDefault("unknown.dat");
-            if (IsSpoiler && !filename.StartsWith(AttachmentExtensions.SpoilerPrefix))
-                filename = filename.Insert(0, AttachmentExtensions.SpoilerPrefix);
 
-            d["file"] = new MultipartFile(File, filename);
+            int i = 0;
+            foreach (var file in Files)
+            {
+                var filename = file.Key ?? "unknown.dat";
+                if (IsSpoiler && !filename.StartsWith(AttachmentExtensions.SpoilerPrefix))
+                    filename = filename.Insert(0, AttachmentExtensions.SpoilerPrefix);
+                d[$"file{i++}"] = new MultipartFile(file.Value, filename);
+            }
 
             var payload = new Dictionary<string, object>();
             if (Content.IsSpecified)
