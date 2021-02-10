@@ -19,7 +19,7 @@
             <dependency id="Discord.Net.WebSocket" version="2.3.1-dev$suffix$" />
             <dependency id="Discord.Net.Commands" version="2.3.1-dev$suffix$" />
             <dependency id="Discord.Net.Webhook" version="2.3.1-dev$suffix$" />
-        </group>       
+        </group>
         <group targetFramework="netstandard2.0">
             <dependency id="Discord.Net.Core" version="2.3.1-dev$suffix$" />
             <dependency id="Discord.Net.Rest" version="2.3.1-dev$suffix$" />
@@ -27,7 +27,15 @@
             <dependency id="Discord.Net.Commands" version="2.3.1-dev$suffix$" />
             <dependency id="Discord.Net.Webhook" version="2.3.1-dev$suffix$" />
         </group>
-		<group targetFramework="netstandard2.1">
+        <group targetFramework="netstandard2.1">
+            <dependency id="Discord.Net.Core" version="2.3.1-dev$suffix$" />
+            <dependency id="Discord.Net.Rest" version="2.3.1-dev$suffix$" />
+            <dependency id="Discord.Net.WebSocket" version="2.3.1-dev$suffix$" />
+            <dependency id="Discord.Net.Commands" version="2.3.1-dev$suffix$" />
+            <dependency id="Discord.Net.Webhook" version="2.3.1-dev$suffix$" />
+        </group>
+        <!-- Added .NET 5.0. -->
+        <group targetFramework="net5.0">
             <dependency id="Discord.Net.Core" version="2.3.1-dev$suffix$" />
             <dependency id="Discord.Net.Rest" version="2.3.1-dev$suffix$" />
             <dependency id="Discord.Net.WebSocket" version="2.3.1-dev$suffix$" />

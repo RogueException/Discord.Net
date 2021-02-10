@@ -5,11 +5,16 @@
     <AssemblyName>Discord.Net.WebSocket</AssemblyName>
     <RootNamespace>Discord.WebSocket</RootNamespace>
     <Description>A core Discord.Net library containing the WebSocket client and models.</Description>
-    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">net461;netstandard2.0;netstandard2.1</TargetFrameworks>
-    <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">netstandard2.0;netstandard2.1</TargetFrameworks>
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <TargetFrameworks>net461;netstandard2.0;netstandard2.1;net5.0</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <!-- The reference assemblies package here can allow to build for .NET Framework when not using windows as well. -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" Condition="'$(TargetFramework)' == 'net461'">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
     <ProjectReference Include="..\Discord.Net.Core\Discord.Net.Core.csproj" />
     <ProjectReference Include="..\Discord.Net.Rest\Discord.Net.Rest.csproj" />
   </ItemGroup>

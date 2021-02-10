@@ -4,10 +4,15 @@
     <AssemblyName>Discord.Net.DebugTools</AssemblyName>
     <RootNamespace>Discord</RootNamespace>
     <Description>A Discord.Net extension adding some helper classes for diagnosing issues.</Description>
-    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">net45;netstandard1.3</TargetFrameworks>
-    <TargetFramework Condition=" '$(OS)' != 'Windows_NT' ">netstandard1.3</TargetFramework>
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <TargetFrameworks>net45;netstandard1.3</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
+    <!-- The reference assemblies package here can allow to build for .NET Framework when not using windows as well. -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" Condition="'$(TargetFramework)' == 'net45'">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
     <ProjectReference Include="..\Discord.Net.Core\Discord.Net.Core.csproj" />
   </ItemGroup>
 </Project>

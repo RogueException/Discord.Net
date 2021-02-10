@@ -5,14 +5,24 @@
     <AssemblyName>Discord.Net.Core</AssemblyName>
     <RootNamespace>Discord</RootNamespace>
     <Description>The core components for the Discord.Net library.</Description>
-    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">net461;netstandard2.0;netstandard2.1</TargetFrameworks>
-    <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">netstandard2.0;netstandard2.1</TargetFrameworks>
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <TargetFrameworks>net461;netstandard2.0;netstandard2.1;net5.0</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
-    <PackageReference Include="System.Collections.Immutable" Version="1.3.1" />
-    <PackageReference Include="System.Interactive.Async" Version="4.0.0" />
-    <PackageReference Include="IDisposableAnalyzers" Version="2.1.2">
+    <!-- The reference assemblies package here can allow to build for .NET Framework when not using windows as well. -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" Condition="'$(TargetFramework)' == 'net461'">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <!-- System.ValueTuple is in .NET Framework 4.7+, older versions need the package. -->
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" Condition="'$(TargetFramework)' == 'net461'" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <!-- oddly enough supports .NET Core 2.1+ and other frameworks. -->
+    <PackageReference Include="System.Collections.Immutable" Version="5.0.0" />
+    <!-- <PackageReference Include="System.Interactive.Async" Version="5.0.0" /> -->
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="5.0.0" />
+    <PackageReference Include="System.Linq.Async" Version="5.0.0" />
+    <PackageReference Include="IDisposableAnalyzers" Version="3.4.8">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>

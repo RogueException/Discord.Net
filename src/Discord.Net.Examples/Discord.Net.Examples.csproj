@@ -1,7 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <TargetFrameworks>netstandard2.0;net5.0</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,7 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Discord.Net.Core\Discord.Net.Core.csproj" />
     <ProjectReference Include="..\Discord.Net.WebSocket\Discord.Net.WebSocket.csproj" />
-    <PackageReference Include="JetBrains.Annotations" Version="2019.1.3" />
+    <PackageReference Include="JetBrains.Annotations" Version="2020.3.0" />
   </ItemGroup>
 
 </Project>

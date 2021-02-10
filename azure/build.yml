@@ -7,6 +7,9 @@ steps:
      verbosityRestore: 'Minimal'
   displayName: Restore packages
 
+- script: dotnet list package --outdated
+  displayName: Outdated Package Check
+
 - script: dotnet build "Discord.Net.sln" --no-restore -v minimal -c $(buildConfiguration) /p:BuildNumber=$(buildNumber) /p:IsTagBuild=$(buildTag)
   displayName: Build projects
 

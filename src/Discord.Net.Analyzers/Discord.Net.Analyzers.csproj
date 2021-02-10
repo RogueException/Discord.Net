@@ -4,10 +4,11 @@
     <AssemblyName>Discord.Net.Analyzers</AssemblyName>
     <RootNamespace>Discord.Analyzers</RootNamespace>
     <Description>A Discord.Net extension adding support for design-time analysis of the API usage.</Description>
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
     <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis" Version="3.3.1" />
+    <PackageReference Include="Microsoft.CodeAnalysis" Version="3.8.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Discord.Net.Commands\Discord.Net.Commands.csproj" />
