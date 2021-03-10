@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="../../Discord.Net.targets" />
-  <Import Project="../../StyleAnalyzer.targets"/>
+  <Import Project="../../StyleAnalyzer.targets" />
   <PropertyGroup>
     <AssemblyName>Discord.Net.WebSocket</AssemblyName>
     <RootNamespace>Discord.WebSocket</RootNamespace>

@@ -64,5 +64,12 @@ namespace Discord
         ///     Only available in API v8.
         /// </remarks>
         Reply = 19,
+        /// <summary>
+        ///     The message is an Application Command
+        /// </summary>
+        /// <remarks>
+        ///     Only available in API v8
+        /// </remarks>
+        ApplicationCommand = 20
     }
 }

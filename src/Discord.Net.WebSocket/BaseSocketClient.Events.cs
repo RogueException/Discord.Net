@@ -23,7 +23,7 @@ namespace Discord.WebSocket
         ///     <code language="cs" region="ChannelCreated"
         ///           source="..\Discord.Net.Examples\WebSocket\BaseSocketClient.Events.Examples.cs"/>
         /// </example>
-        public event Func<SocketChannel, Task> ChannelCreated 
+        public event Func<SocketChannel, Task> ChannelCreated
         {
             add { _channelCreatedEvent.Add(value); }
             remove { _channelCreatedEvent.Remove(value); }
@@ -45,7 +45,8 @@ namespace Discord.WebSocket
         ///     <code language="cs" region="ChannelDestroyed"
         ///           source="..\Discord.Net.Examples\WebSocket\BaseSocketClient.Events.Examples.cs"/>
         /// </example>
-        public event Func<SocketChannel, Task> ChannelDestroyed {
+        public event Func<SocketChannel, Task> ChannelDestroyed
+        {
             add { _channelDestroyedEvent.Add(value); }
             remove { _channelDestroyedEvent.Remove(value); }
         }
@@ -67,10 +68,11 @@ namespace Discord.WebSocket
         ///     <code language="cs" region="ChannelUpdated"
         ///           source="..\Discord.Net.Examples\WebSocket\BaseSocketClient.Events.Examples.cs"/>
         /// </example>
-        public event Func<SocketChannel, SocketChannel, Task> ChannelUpdated {
+        public event Func<SocketChannel, SocketChannel, Task> ChannelUpdated
+        {
             add { _channelUpdatedEvent.Add(value); }
             remove { _channelUpdatedEvent.Remove(value); }
-        }    
+        }
         internal readonly AsyncEvent<Func<SocketChannel, SocketChannel, Task>> _channelUpdatedEvent = new AsyncEvent<Func<SocketChannel, SocketChannel, Task>>();
 
         //Messages
@@ -92,7 +94,8 @@ namespace Discord.WebSocket
         ///     <code language="cs" region="MessageReceived"
         ///           source="..\Discord.Net.Examples\WebSocket\BaseSocketClient.Events.Examples.cs"/>
         /// </example>
-        public event Func<SocketMessage, Task> MessageReceived {
+        public event Func<SocketMessage, Task> MessageReceived
+        {
             add { _messageReceivedEvent.Add(value); }
             remove { _messageReceivedEvent.Remove(value); }
         }
@@ -124,7 +127,8 @@ namespace Discord.WebSocket
         ///     <code language="cs" region="MessageDeleted"
         ///           source="..\Discord.Net.Examples\WebSocket\BaseSocketClient.Events.Examples.cs" />
         /// </example>
-        public event Func<Cacheable<IMessage, ulong>, ISocketMessageChannel, Task> MessageDeleted {
+        public event Func<Cacheable<IMessage, ulong>, ISocketMessageChannel, Task> MessageDeleted
+        {
             add { _messageDeletedEvent.Add(value); }
             remove { _messageDeletedEvent.Remove(value); }
         }
@@ -182,7 +186,8 @@ namespace Discord.WebSocket
         ///         <see cref="ISocketMessageChannel"/> parameter.
         ///     </para>
         /// </remarks>
-        public event Func<Cacheable<IMessage, ulong>, SocketMessage, ISocketMessageChannel, Task> MessageUpdated {
+        public event Func<Cacheable<IMessage, ulong>, SocketMessage, ISocketMessageChannel, Task> MessageUpdated
+        {
             add { _messageUpdatedEvent.Add(value); }
             remove { _messageUpdatedEvent.Remove(value); }
         }
@@ -217,19 +222,22 @@ namespace Discord.WebSocket
         ///     <code language="cs" region="ReactionAdded"
         ///           source="..\Discord.Net.Examples\WebSocket\BaseSocketClient.Events.Examples.cs"/>
         /// </example>
-        public event Func<Cacheable<IUserMessage, ulong>, ISocketMessageChannel, SocketReaction, Task> ReactionAdded {
+        public event Func<Cacheable<IUserMessage, ulong>, ISocketMessageChannel, SocketReaction, Task> ReactionAdded
+        {
             add { _reactionAddedEvent.Add(value); }
             remove { _reactionAddedEvent.Remove(value); }
         }
         internal readonly AsyncEvent<Func<Cacheable<IUserMessage, ulong>, ISocketMessageChannel, SocketReaction, Task>> _reactionAddedEvent = new AsyncEvent<Func<Cacheable<IUserMessage, ulong>, ISocketMessageChannel, SocketReaction, Task>>();
         /// <summary> Fired when a reaction is removed from a message. </summary>
-        public event Func<Cacheable<IUserMessage, ulong>, ISocketMessageChannel, SocketReaction, Task> ReactionRemoved {
+        public event Func<Cacheable<IUserMessage, ulong>, ISocketMessageChannel, SocketReaction, Task> ReactionRemoved
+        {
             add { _reactionRemovedEvent.Add(value); }
             remove { _reactionRemovedEvent.Remove(value); }
         }
         internal readonly AsyncEvent<Func<Cacheable<IUserMessage, ulong>, ISocketMessageChannel, SocketReaction, Task>> _reactionRemovedEvent = new AsyncEvent<Func<Cacheable<IUserMessage, ulong>, ISocketMessageChannel, SocketReaction, Task>>();
         /// <summary> Fired when all reactions to a message are cleared. </summary>
-        public event Func<Cacheable<IUserMessage, ulong>, ISocketMessageChannel, Task> ReactionsCleared {
+        public event Func<Cacheable<IUserMessage, ulong>, ISocketMessageChannel, Task> ReactionsCleared
+        {
             add { _reactionsClearedEvent.Add(value); }
             remove { _reactionsClearedEvent.Remove(value); }
         }
@@ -259,19 +267,22 @@ namespace Discord.WebSocket
 
         //Roles
         /// <summary> Fired when a role is created. </summary>
-        public event Func<SocketRole, Task> RoleCreated {
+        public event Func<SocketRole, Task> RoleCreated
+        {
             add { _roleCreatedEvent.Add(value); }
             remove { _roleCreatedEvent.Remove(value); }
         }
         internal readonly AsyncEvent<Func<SocketRole, Task>> _roleCreatedEvent = new AsyncEvent<Func<SocketRole, Task>>();
         /// <summary> Fired when a role is deleted. </summary>
-        public event Func<SocketRole, Task> RoleDeleted {
+        public event Func<SocketRole, Task> RoleDeleted
+        {
             add { _roleDeletedEvent.Add(value); }
             remove { _roleDeletedEvent.Remove(value); }
         }
         internal readonly AsyncEvent<Func<SocketRole, Task>> _roleDeletedEvent = new AsyncEvent<Func<SocketRole, Task>>();
         /// <summary> Fired when a role is updated. </summary>
-        public event Func<SocketRole, SocketRole, Task> RoleUpdated {
+        public event Func<SocketRole, SocketRole, Task> RoleUpdated
+        {
             add { _roleUpdatedEvent.Add(value); }
             remove { _roleUpdatedEvent.Remove(value); }
         }
@@ -279,37 +290,43 @@ namespace Discord.WebSocket
 
         //Guilds
         /// <summary> Fired when the connected account joins a guild. </summary>
-        public event Func<SocketGuild, Task> JoinedGuild {
+        public event Func<SocketGuild, Task> JoinedGuild
+        {
             add { _joinedGuildEvent.Add(value); }
             remove { _joinedGuildEvent.Remove(value); }
         }
         internal readonly AsyncEvent<Func<SocketGuild, Task>> _joinedGuildEvent = new AsyncEvent<Func<SocketGuild, Task>>();
         /// <summary> Fired when the connected account leaves a guild. </summary>
-        public event Func<SocketGuild, Task> LeftGuild {
+        public event Func<SocketGuild, Task> LeftGuild
+        {
             add { _leftGuildEvent.Add(value); }
             remove { _leftGuildEvent.Remove(value); }
         }
         internal readonly AsyncEvent<Func<SocketGuild, Task>> _leftGuildEvent = new AsyncEvent<Func<SocketGuild, Task>>();
         /// <summary> Fired when a guild becomes available. </summary>
-        public event Func<SocketGuild, Task> GuildAvailable {
+        public event Func<SocketGuild, Task> GuildAvailable
+        {
             add { _guildAvailableEvent.Add(value); }
             remove { _guildAvailableEvent.Remove(value); }
         }
         internal readonly AsyncEvent<Func<SocketGuild, Task>> _guildAvailableEvent = new AsyncEvent<Func<SocketGuild, Task>>();
         /// <summary> Fired when a guild becomes unavailable. </summary>
-        public event Func<SocketGuild, Task> GuildUnavailable {
+        public event Func<SocketGuild, Task> GuildUnavailable
+        {
             add { _guildUnavailableEvent.Add(value); }
             remove { _guildUnavailableEvent.Remove(value); }
         }
         internal readonly AsyncEvent<Func<SocketGuild, Task>> _guildUnavailableEvent = new AsyncEvent<Func<SocketGuild, Task>>();
         /// <summary> Fired when offline guild members are downloaded. </summary>
-        public event Func<SocketGuild, Task> GuildMembersDownloaded {
+        public event Func<SocketGuild, Task> GuildMembersDownloaded
+        {
             add { _guildMembersDownloadedEvent.Add(value); }
             remove { _guildMembersDownloadedEvent.Remove(value); }
         }
         internal readonly AsyncEvent<Func<SocketGuild, Task>> _guildMembersDownloadedEvent = new AsyncEvent<Func<SocketGuild, Task>>();
         /// <summary> Fired when a guild is updated. </summary>
-        public event Func<SocketGuild, SocketGuild, Task> GuildUpdated {
+        public event Func<SocketGuild, SocketGuild, Task> GuildUpdated
+        {
             add { _guildUpdatedEvent.Add(value); }
             remove { _guildUpdatedEvent.Remove(value); }
         }
@@ -317,43 +334,50 @@ namespace Discord.WebSocket
 
         //Users
         /// <summary> Fired when a user joins a guild. </summary>
-        public event Func<SocketGuildUser, Task> UserJoined {
+        public event Func<SocketGuildUser, Task> UserJoined
+        {
             add { _userJoinedEvent.Add(value); }
             remove { _userJoinedEvent.Remove(value); }
         }
         internal readonly AsyncEvent<Func<SocketGuildUser, Task>> _userJoinedEvent = new AsyncEvent<Func<SocketGuildUser, Task>>();
         /// <summary> Fired when a user leaves a guild. </summary>
-        public event Func<SocketGuildUser, Task> UserLeft {
+        public event Func<SocketGuildUser, Task> UserLeft
+        {
             add { _userLeftEvent.Add(value); }
             remove { _userLeftEvent.Remove(value); }
         }
         internal readonly AsyncEvent<Func<SocketGuildUser, Task>> _userLeftEvent = new AsyncEvent<Func<SocketGuildUser, Task>>();
         /// <summary> Fired when a user is banned from a guild. </summary>
-        public event Func<SocketUser, SocketGuild, Task> UserBanned {
+        public event Func<SocketUser, SocketGuild, Task> UserBanned
+        {
             add { _userBannedEvent.Add(value); }
             remove { _userBannedEvent.Remove(value); }
         }
         internal readonly AsyncEvent<Func<SocketUser, SocketGuild, Task>> _userBannedEvent = new AsyncEvent<Func<SocketUser, SocketGuild, Task>>();
         /// <summary> Fired when a user is unbanned from a guild. </summary>
-        public event Func<SocketUser, SocketGuild, Task> UserUnbanned {
+        public event Func<SocketUser, SocketGuild, Task> UserUnbanned
+        {
             add { _userUnbannedEvent.Add(value); }
             remove { _userUnbannedEvent.Remove(value); }
         }
         internal readonly AsyncEvent<Func<SocketUser, SocketGuild, Task>> _userUnbannedEvent = new AsyncEvent<Func<SocketUser, SocketGuild, Task>>();
         /// <summary> Fired when a user is updated. </summary>
-        public event Func<SocketUser, SocketUser, Task> UserUpdated {
+        public event Func<SocketUser, SocketUser, Task> UserUpdated
+        {
             add { _userUpdatedEvent.Add(value); }
             remove { _userUpdatedEvent.Remove(value); }
         }
         internal readonly AsyncEvent<Func<SocketUser, SocketUser, Task>> _userUpdatedEvent = new AsyncEvent<Func<SocketUser, SocketUser, Task>>();
         /// <summary> Fired when a guild member is updated, or a member presence is updated. </summary>
-        public event Func<SocketGuildUser, SocketGuildUser, Task> GuildMemberUpdated {
+        public event Func<SocketGuildUser, SocketGuildUser, Task> GuildMemberUpdated
+        {
             add { _guildMemberUpdatedEvent.Add(value); }
             remove { _guildMemberUpdatedEvent.Remove(value); }
         }
-        internal readonly AsyncEvent<Func<SocketGuildUser, SocketGuildUser, Task>> _guildMemberUpdatedEvent = new AsyncEvent<Func<SocketGuildUser, SocketGuildUser, Task>>();     
+        internal readonly AsyncEvent<Func<SocketGuildUser, SocketGuildUser, Task>> _guildMemberUpdatedEvent = new AsyncEvent<Func<SocketGuildUser, SocketGuildUser, Task>>();
         /// <summary> Fired when a user joins, leaves, or moves voice channels. </summary>
-        public event Func<SocketUser, SocketVoiceState, SocketVoiceState, Task> UserVoiceStateUpdated {
+        public event Func<SocketUser, SocketVoiceState, SocketVoiceState, Task> UserVoiceStateUpdated
+        {
             add { _userVoiceStateUpdatedEvent.Add(value); }
             remove { _userVoiceStateUpdatedEvent.Remove(value); }
         }
@@ -361,30 +385,34 @@ namespace Discord.WebSocket
         /// <summary> Fired when the bot connects to a Discord voice server. </summary>
         public event Func<SocketVoiceServer, Task> VoiceServerUpdated
         {
-            add { _voiceServerUpdatedEvent.Add(value);  }
+            add { _voiceServerUpdatedEvent.Add(value); }
             remove { _voiceServerUpdatedEvent.Remove(value); }
         }
         internal readonly AsyncEvent<Func<SocketVoiceServer, Task>> _voiceServerUpdatedEvent = new AsyncEvent<Func<SocketVoiceServer, Task>>();
         /// <summary> Fired when the connected account is updated. </summary>
-        public event Func<SocketSelfUser, SocketSelfUser, Task> CurrentUserUpdated {
+        public event Func<SocketSelfUser, SocketSelfUser, Task> CurrentUserUpdated
+        {
             add { _selfUpdatedEvent.Add(value); }
             remove { _selfUpdatedEvent.Remove(value); }
         }
         internal readonly AsyncEvent<Func<SocketSelfUser, SocketSelfUser, Task>> _selfUpdatedEvent = new AsyncEvent<Func<SocketSelfUser, SocketSelfUser, Task>>();
         /// <summary> Fired when a user starts typing. </summary>
-        public event Func<SocketUser, ISocketMessageChannel, Task> UserIsTyping {
+        public event Func<SocketUser, ISocketMessageChannel, Task> UserIsTyping
+        {
             add { _userIsTypingEvent.Add(value); }
             remove { _userIsTypingEvent.Remove(value); }
         }
         internal readonly AsyncEvent<Func<SocketUser, ISocketMessageChannel, Task>> _userIsTypingEvent = new AsyncEvent<Func<SocketUser, ISocketMessageChannel, Task>>();
         /// <summary> Fired when a user joins a group channel. </summary>
-        public event Func<SocketGroupUser, Task> RecipientAdded {
+        public event Func<SocketGroupUser, Task> RecipientAdded
+        {
             add { _recipientAddedEvent.Add(value); }
             remove { _recipientAddedEvent.Remove(value); }
         }
         internal readonly AsyncEvent<Func<SocketGroupUser, Task>> _recipientAddedEvent = new AsyncEvent<Func<SocketGroupUser, Task>>();
         /// <summary> Fired when a user is removed from a group channel. </summary>
-        public event Func<SocketGroupUser, Task> RecipientRemoved {
+        public event Func<SocketGroupUser, Task> RecipientRemoved
+        {
             add { _recipientRemovedEvent.Add(value); }
             remove { _recipientRemovedEvent.Remove(value); }
         }
@@ -431,5 +459,91 @@ namespace Discord.WebSocket
             remove { _inviteDeletedEvent.Remove(value); }
         }
         internal readonly AsyncEvent<Func<SocketGuildChannel, string, Task>> _inviteDeletedEvent = new AsyncEvent<Func<SocketGuildChannel, string, Task>>();
+
+        //Interactions
+        /// <summary>
+        ///     Fired when an Interaction is created.
+        /// </summary>
+        /// <remarks>
+        ///     <para>
+        ///         This event is fired when an interaction is created. The event handler must return a
+        ///         <see cref="Task"/> and accept a <see cref="SocketInteraction"/> as its parameter.
+        ///     </para>
+        ///     <para>
+        ///         The interaction created will be passed into the <see cref="SocketInteraction"/> parameter.
+        ///     </para>
+        /// </remarks>
+        public event Func<SocketInteraction, Task> InteractionCreated
+        {
+            add { _interactionCreatedEvent.Add(value); }
+            remove { _interactionCreatedEvent.Remove(value); }
+        }
+        internal readonly AsyncEvent<Func<SocketInteraction, Task>> _interactionCreatedEvent = new AsyncEvent<Func<SocketInteraction, Task>>();
+
+        /// <summary>
+        ///     Fired when a guild application command is created.
+        ///</summary>
+        ///<remarks>
+        ///     <para>
+        ///         This event is fired when an application command is created. The event handler must return a
+        ///         <see cref="Task"/> and accept a <see cref="SocketApplicationCommand"/> as its parameter.
+        ///     </para>
+        ///     <para>
+        ///         The command that was deleted will be passed into the <see cref="SocketApplicationCommand"/> parameter.
+        ///     </para>
+        ///     <note>
+        ///         <b>This event is an undocumented discord event and may break at any time, its not recommended to rely on this event</b>
+        ///     </note>
+        /// </remarks>
+        public event Func<SocketApplicationCommand, Task> ApplicationCommandCreated
+        {
+            add { _applicationCommandCreated.Add(value); }
+            remove { _applicationCommandCreated.Remove(value); }
+        }
+        internal readonly AsyncEvent<Func<SocketApplicationCommand, Task>> _applicationCommandCreated = new AsyncEvent<Func<SocketApplicationCommand, Task>>();
+
+        /// <summary>
+        ///      Fired when a guild application command is updated.
+        /// </summary>
+        /// <remarks>
+        ///     <para>
+        ///         This event is fired when an application command is updated. The event handler must return a
+        ///         <see cref="Task"/> and accept a <see cref="SocketApplicationCommand"/> as its parameter.
+        ///     </para>
+        ///     <para>
+        ///         The command that was deleted will be passed into the <see cref="SocketApplicationCommand"/> parameter.
+        ///     </para>
+        ///     <note>
+        ///         <b>This event is an undocumented discord event and may break at any time, its not recommended to rely on this event</b>
+        ///     </note>
+        /// </remarks>
+        public event Func<SocketApplicationCommand, Task> ApplicationCommandUpdated
+        {
+            add { _applicationCommandUpdated.Add(value); }
+            remove { _applicationCommandUpdated.Remove(value); }
+        }
+        internal readonly AsyncEvent<Func<SocketApplicationCommand, Task>> _applicationCommandUpdated = new AsyncEvent<Func<SocketApplicationCommand, Task>>();
+
+        /// <summary>
+        ///      Fired when a guild application command is deleted.
+        /// </summary>
+        /// <remarks>
+        ///     <para>
+        ///         This event is fired when an application command is deleted. The event handler must return a
+        ///         <see cref="Task"/> and accept a <see cref="SocketApplicationCommand"/> as its parameter.
+        ///     </para>
+        ///     <para>
+        ///         The command that was deleted will be passed into the <see cref="SocketApplicationCommand"/> parameter.
+        ///     </para>
+        ///     <note>
+        ///         <b>This event is an undocumented discord event and may break at any time, its not recommended to rely on this event</b>
+        ///     </note>
+        /// </remarks>
+        public event Func<SocketApplicationCommand, Task> ApplicationCommandDeleted
+        {
+            add { _applicationCommandDeleted.Add(value); }
+            remove { _applicationCommandDeleted.Remove(value); }
+        }
+        internal readonly AsyncEvent<Func<SocketApplicationCommand, Task>> _applicationCommandDeleted = new AsyncEvent<Func<SocketApplicationCommand, Task>>();
     }
 }

@@ -201,5 +201,24 @@ namespace Discord.Rest
                 }
             };
         }
+
+        public static async Task<IReadOnlyCollection<RestGlobalCommand>> GetGlobalApplicationCommands(BaseDiscordClient client, RequestOptions options)
+        {
+            var response = await client.ApiClient.GetGlobalApplicationCommandsAsync(options).ConfigureAwait(false);
+
+            if (!response.Any())
+                return new RestGlobalCommand[0];
+
+            return response.Select(x => RestGlobalCommand.Create(client, x)).ToArray();
+        }
+        public static async Task<IReadOnlyCollection<RestGuildCommand>> GetGuildApplicationCommands(BaseDiscordClient client, ulong guildId, RequestOptions options)
+        {
+            var response = await client.ApiClient.GetGuildApplicationCommandAsync(guildId, options).ConfigureAwait(false);
+
+            if (!response.Any())
+                return new RestGuildCommand[0].ToImmutableArray();
+
+            return response.Select(x => RestGuildCommand.Create(client, x, guildId)).ToImmutableArray();
+        }
     }
 }

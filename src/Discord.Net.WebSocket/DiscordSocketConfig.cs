@@ -106,6 +106,29 @@ namespace Discord.WebSocket
         public bool AlwaysDownloadUsers { get; set; } = false;
 
         /// <summary>
+        ///     Gets or sets whether or not interactions are acknowledge with source. 
+        /// </summary>
+        /// <remarks>
+        ///     <para>
+        ///         Discord interactions will not appear in chat until the client responds to them. With this option set to 
+        ///         <see langword="true"/>, the client will automatically acknowledge the interaction with <see cref="InteractionResponseType.ACKWithSource"/>.
+        ///         See <see href="https://discord.com/developers/docs/interactions/slash-commands#interaction-interactionresponsetype">the docs</see> on
+        ///         responding to interactions for more info.
+        ///     </para>
+        ///     <para>
+        ///         With this option set to <see langword="false"/>, you will have to acknowledge the interaction with
+        ///         <see cref="SocketInteraction.RespondAsync(string, bool, Embed, InteractionResponseType, AllowedMentions, RequestOptions)"/>.
+        ///         Only after the interaction is acknowledged, the origional slash command message will be visible.
+        ///     </para>
+        ///     <note>
+        ///         Please note that manually acknowledging the interaction with a message reply will not provide any return data.
+        ///         Automatically acknowledging the interaction without sending the message will allow for follow up responses to
+        ///         be used; follow up responses return the message data sent.
+        ///     </note>
+        /// </remarks>
+        public bool AlwaysAcknowledgeInteractions { get; set; } = true;
+
+        /// <summary>
         ///     Gets or sets the timeout for event handlers, in milliseconds, after which a warning will be logged.
         ///     Setting this property to <c>null</c>disables this check.
         /// </summary>
