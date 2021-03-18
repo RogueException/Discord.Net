@@ -506,19 +506,66 @@ namespace Discord.Commands
             services = services ?? EmptyServiceProvider.Instance;
 
             var searchResult = Search(input);
-            if (!searchResult.IsSuccess)
+
+            //Since ValidateAndGetBestMatch is deterministic on the return type, we can use pattern matching on the type for infering the code flow.
+            var (validationResult, commandMatch) = await ValidateAndGetBestMatch(searchResult, context, services, multiMatchHandling);
+
+            if(validationResult is SearchResult)
             {
                 await _commandExecutedEvent.InvokeAsync(Optional.Create<CommandInfo>(), context, searchResult).ConfigureAwait(false);
-                return searchResult;
             }
-                
+            else if(validationResult is ParseResult parseResult)
+            {
+                var result = await commandMatch.Value.Command.ExecuteAsync(context, parseResult, services).ConfigureAwait(false);
+                if (!result.IsSuccess && !(result is RuntimeResult || result is ExecuteResult)) // succesful results raise the event in CommandInfo#ExecuteInternalAsync (have to raise it there b/c deffered execution)
+                    await _commandExecutedEvent.InvokeAsync(commandMatch.Value.Command, context, result);
+                return result;
+            }
+            else
+            {
+                await _commandExecutedEvent.InvokeAsync(commandMatch.Value.Command, context, validationResult).ConfigureAwait(false);
+            }
+            return validationResult;
+        }
 
-            var commands = searchResult.Commands;
+        // Calculates the 'score' of a command given a parse result
+        float CalculateScore(CommandMatch match, ParseResult parseResult)
+        {
+            float argValuesScore = 0, paramValuesScore = 0;
+
+            if (match.Command.Parameters.Count > 0)
+            {
+                var argValuesSum = parseResult.ArgValues?.Sum(x => x.Values.OrderByDescending(y => y.Score).FirstOrDefault().Score) ?? 0;
+                var paramValuesSum = parseResult.ParamValues?.Sum(x => x.Values.OrderByDescending(y => y.Score).FirstOrDefault().Score) ?? 0;
+
+                argValuesScore = argValuesSum / match.Command.Parameters.Count;
+                paramValuesScore = paramValuesSum / match.Command.Parameters.Count;
+            }
+
+            var totalArgsScore = (argValuesScore + paramValuesScore) / 2;
+            return match.Command.Priority + totalArgsScore * 0.99f;
+        }
+
+        /// <summary>
+        /// Validates and gets the best <see cref="CommandMatch"/> from a specified <see cref="SearchResult"/>
+        /// </summary>
+        /// <param name="matches">The SearchResult.</param>
+        /// <param name="context">The context of the command.</param>
+        /// <param name="provider">The service provider to be used on the command's dependency injection.</param>
+        /// <param name="multiMatchHandling">The handling mode when multiple command matches are found.</param>
+        /// <returns>A task that represents the asynchronous validation operation. The task result contains the result of the
+        ///     command validation and the command matched, if a match was found.</returns>
+        public async Task<(IResult, Optional<CommandMatch>)> ValidateAndGetBestMatch(SearchResult matches, ICommandContext context, IServiceProvider provider, MultiMatchHandling multiMatchHandling = MultiMatchHandling.Exception)
+        {
+            if (!matches.IsSuccess)
+                return (matches, Optional.Create<CommandMatch>());
+
+            var commands = matches.Commands;
             var preconditionResults = new Dictionary<CommandMatch, PreconditionResult>();
 
-            foreach (var match in commands)
+            foreach (var command in commands)
             {
-                preconditionResults[match] = await match.Command.CheckPreconditionsAsync(context, services).ConfigureAwait(false);
+                preconditionResults[command] = await command.CheckPreconditionsAsync(context, provider);
             }
 
             var successfulPreconditions = preconditionResults
@@ -527,21 +574,18 @@ namespace Discord.Commands
 
             if (successfulPreconditions.Length == 0)
             {
-                //All preconditions failed, return the one from the highest priority command
                 var bestCandidate = preconditionResults
-                    .OrderByDescending(x => x.Key.Command.Priority)
-                    .FirstOrDefault(x => !x.Value.IsSuccess);
+                   .OrderByDescending(x => x.Key.Command.Priority)
+                   .FirstOrDefault(x => !x.Value.IsSuccess);
 
-                await _commandExecutedEvent.InvokeAsync(bestCandidate.Key.Command, context, bestCandidate.Value).ConfigureAwait(false);
-                return bestCandidate.Value;
+                return (bestCandidate.Value, bestCandidate.Key);
             }
 
-            //If we get this far, at least one precondition was successful.
+            var parseResults = new Dictionary<CommandMatch, ParseResult>();
 
-            var parseResultsDict = new Dictionary<CommandMatch, ParseResult>();
             foreach (var pair in successfulPreconditions)
             {
-                var parseResult = await pair.Key.ParseAsync(context, searchResult, pair.Value, services).ConfigureAwait(false);
+                var parseResult = await pair.Key.ParseAsync(context, matches, pair.Value, provider).ConfigureAwait(false);
 
                 if (parseResult.Error == CommandError.MultipleMatches)
                 {
@@ -556,51 +600,27 @@ namespace Discord.Commands
                     }
                 }
 
-                parseResultsDict[pair.Key] = parseResult;
+                parseResults[pair.Key] = parseResult;
             }
 
-            // Calculates the 'score' of a command given a parse result
-            float CalculateScore(CommandMatch match, ParseResult parseResult)
-            {
-                float argValuesScore = 0, paramValuesScore = 0;
+            var weightedParseResults = parseResults
+               .OrderByDescending(x => CalculateScore(x.Key, x.Value));
 
-                if (match.Command.Parameters.Count > 0)
-                {
-                    var argValuesSum = parseResult.ArgValues?.Sum(x => x.Values.OrderByDescending(y => y.Score).FirstOrDefault().Score) ?? 0;
-                    var paramValuesSum = parseResult.ParamValues?.Sum(x => x.Values.OrderByDescending(y => y.Score).FirstOrDefault().Score) ?? 0;
-
-                    argValuesScore = argValuesSum / match.Command.Parameters.Count;
-                    paramValuesScore = paramValuesSum / match.Command.Parameters.Count;
-                }
-
-                var totalArgsScore = (argValuesScore + paramValuesScore) / 2;
-                return match.Command.Priority + totalArgsScore * 0.99f;
-            }
-
-            //Order the parse results by their score so that we choose the most likely result to execute
-            var parseResults = parseResultsDict
-                .OrderByDescending(x => CalculateScore(x.Key, x.Value));
-
-            var successfulParses = parseResults
+            var successfulParses = weightedParseResults
                 .Where(x => x.Value.IsSuccess)
                 .ToArray();
 
-            if (successfulParses.Length == 0)
+            if(successfulParses.Length == 0)
             {
-                //All parses failed, return the one from the highest priority command, using score as a tie breaker
                 var bestMatch = parseResults
                     .FirstOrDefault(x => !x.Value.IsSuccess);
 
-                await _commandExecutedEvent.InvokeAsync(bestMatch.Key.Command, context, bestMatch.Value).ConfigureAwait(false);
-                return bestMatch.Value;
+                return (bestMatch.Value, bestMatch.Key);
             }
 
-            //If we get this far, at least one parse was successful. Execute the most likely overload.
             var chosenOverload = successfulParses[0];
-            var result = await chosenOverload.Key.ExecuteAsync(context, chosenOverload.Value, services).ConfigureAwait(false);
-            if (!result.IsSuccess && !(result is RuntimeResult || result is ExecuteResult)) // succesful results raise the event in CommandInfo#ExecuteInternalAsync (have to raise it there b/c deffered execution)
-                await _commandExecutedEvent.InvokeAsync(chosenOverload.Key.Command, context, result);
-            return result;
+
+            return (chosenOverload.Value, chosenOverload.Key);
         }
 
         protected virtual void Dispose(bool disposing)
