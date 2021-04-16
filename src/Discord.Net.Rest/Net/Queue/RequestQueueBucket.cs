@@ -99,6 +99,7 @@ namespace Discord.Net.Queue
                             default:
                                 int? code = null;
                                 string reason = null;
+                                object errors = null;
                                 if (response.Stream != null)
                                 {
                                     try
@@ -109,11 +110,12 @@ namespace Discord.Net.Queue
                                             var json = JToken.Load(jsonReader);
                                             try { code = json.Value<int>("code"); } catch { };
                                             try { reason = json.Value<string>("message"); } catch { };
+                                            try { errors = json.Value<object>("errors"); } catch { };
                                         }
                                     }
                                     catch { }
                                 }
-                                throw new HttpException(response.StatusCode, request, code, reason);
+                                throw new HttpException(response.StatusCode, request, code, reason, errors);
                         }
                     }
                     else

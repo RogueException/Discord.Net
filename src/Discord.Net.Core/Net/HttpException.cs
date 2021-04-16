@@ -34,6 +34,13 @@ namespace Discord.Net
         ///     Gets the request object used to send the request.
         /// </summary>
         public IRequest Request { get; }
+        /// <summary>
+        ///     The error object returned from discord.
+        /// </summary>
+        /// <remarks>
+        ///     Note: This object can be null if discord didn't provide it.
+        /// </remarks>
+        public object Error { get; }
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="HttpException" /> class.
@@ -42,13 +49,14 @@ namespace Discord.Net
         /// <param name="request">The request that was sent prior to the exception.</param>
         /// <param name="discordCode">The Discord status code returned.</param>
         /// <param name="reason">The reason behind the exception.</param>
-        public HttpException(HttpStatusCode httpCode, IRequest request, int? discordCode = null, string reason = null)
+        public HttpException(HttpStatusCode httpCode, IRequest request, int? discordCode = null, string reason = null, object errors = null)
             : base(CreateMessage(httpCode, discordCode, reason))
         {
             HttpCode = httpCode;
             Request = request;
             DiscordCode = discordCode;
             Reason = reason;
+            Error = errors;
         }
 
         private static string CreateMessage(HttpStatusCode httpCode, int? discordCode = null, string reason = null)

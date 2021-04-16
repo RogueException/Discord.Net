@@ -73,6 +73,7 @@ namespace Discord.WebSocket
         internal bool AlwaysDownloadUsers { get; private set; }
         internal int? HandlerTimeout { get; private set; }
         internal bool? ExclusiveBulkDelete { get; private set; }
+        internal bool AlwaysAcknowledgeInteractions { get; private set; }
 
         internal new DiscordSocketApiClient ApiClient => base.ApiClient as DiscordSocketApiClient;
         /// <inheritdoc />
@@ -135,6 +136,7 @@ namespace Discord.WebSocket
             UdpSocketProvider = config.UdpSocketProvider;
             WebSocketProvider = config.WebSocketProvider;
             AlwaysDownloadUsers = config.AlwaysDownloadUsers;
+            AlwaysAcknowledgeInteractions = config.AlwaysAcknowledgeInteractions;
             HandlerTimeout = config.HandlerTimeout;
             ExclusiveBulkDelete = config.ExclusiveBulkDelete;
             State = new ClientState(0, 0);
@@ -1799,7 +1801,88 @@ namespace Discord.WebSocket
                                     }
                                 }
                                 break;
+                            case "INTERACTION_CREATE":
+                                {
+                                    await _gatewayLogger.DebugAsync("Received Dispatch (INTERACTION_CREATE)").ConfigureAwait(false);
 
+                                    var data = (payload as JToken).ToObject<API.Gateway.InteractionCreated>(_serializer);
+                                    if (State.GetChannel(data.ChannelId) is SocketGuildChannel channel)
+                                    {
+                                        var guild = channel.Guild;
+                                        if (!guild.IsSynced)
+                                        {
+                                            await UnsyncedGuildAsync(type, guild.Id).ConfigureAwait(false);
+                                            return;
+                                        }
+
+                                        var interaction = SocketInteraction.Create(this, data);
+
+                                        if (this.AlwaysAcknowledgeInteractions)
+                                            await interaction.AcknowledgeAsync().ConfigureAwait(false);
+
+                                        await TimedInvokeAsync(_interactionCreatedEvent, nameof(InteractionCreated), interaction).ConfigureAwait(false);
+                                    }
+                                    else
+                                    {
+                                        await UnknownChannelAsync(type, data.ChannelId).ConfigureAwait(false);
+                                        return;
+                                    }
+                                }
+                                break;
+                            case "APPLICATION_COMMAND_CREATE":
+                                {
+                                    await _gatewayLogger.DebugAsync("Received Dispatch (APPLICATION_COMMAND_CREATE)").ConfigureAwait(false);
+
+                                    var data = (payload as JToken).ToObject<API.Gateway.ApplicationCommandCreatedUpdatedEvent>(_serializer);
+
+                                    var guild = State.GetGuild(data.GuildId);
+                                    if(guild == null)
+                                    {
+                                        await UnknownGuildAsync(type, data.GuildId).ConfigureAwait(false);
+                                        return;
+                                    }
+
+                                    var applicationCommand = SocketApplicationCommand.Create(this, data);
+
+                                    await TimedInvokeAsync(_applicationCommandCreated, nameof(ApplicationCommandCreated), applicationCommand).ConfigureAwait(false);
+                                }
+                                break;
+                            case "APPLICATION_COMMAND_UPDATE":
+                                {
+                                    await _gatewayLogger.DebugAsync("Received Dispatch (APPLICATION_COMMAND_UPDATE)").ConfigureAwait(false);
+
+                                    var data = (payload as JToken).ToObject<API.Gateway.ApplicationCommandCreatedUpdatedEvent>(_serializer);
+
+                                    var guild = State.GetGuild(data.GuildId);
+                                    if (guild == null)
+                                    {
+                                        await UnknownGuildAsync(type, data.GuildId).ConfigureAwait(false);
+                                        return;
+                                    }
+
+                                    var applicationCommand = SocketApplicationCommand.Create(this, data);
+
+                                    await TimedInvokeAsync(_applicationCommandUpdated, nameof(ApplicationCommandUpdated), applicationCommand).ConfigureAwait(false);
+                                }
+                                break;
+                            case "APPLICATION_COMMAND_DELETE":
+                                {
+                                    await _gatewayLogger.DebugAsync("Received Dispatch (APPLICATION_COMMAND_DELETE)").ConfigureAwait(false);
+
+                                    var data = (payload as JToken).ToObject<API.Gateway.ApplicationCommandCreatedUpdatedEvent>(_serializer);
+
+                                    var guild = State.GetGuild(data.GuildId);
+                                    if (guild == null)
+                                    {
+                                        await UnknownGuildAsync(type, data.GuildId).ConfigureAwait(false);
+                                        return;
+                                    }
+
+                                    var applicationCommand = SocketApplicationCommand.Create(this, data);
+
+                                    await TimedInvokeAsync(_applicationCommandDeleted, nameof(ApplicationCommandDeleted), applicationCommand).ConfigureAwait(false);
+                                }
+                                break;
                             //Ignored (User only)
                             case "CHANNEL_PINS_ACK":
                                 await _gatewayLogger.DebugAsync("Ignored Dispatch (CHANNEL_PINS_ACK)").ConfigureAwait(false);
