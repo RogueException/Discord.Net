@@ -1,0 +1,35 @@
+@page "/"
+@namespace _05_simple_blazor_discord_login.Pages
+<h1>Hello!</h1>
+
+Navigate to /#access_token=real_access and test me.
+You can use https://discord.com/developers/applications/YourApplicationNumber/oauth2 to get an oauth2 url you can visit. Set the redirect URL to https://localhost:{whatever port you are using for debuging}/ or the final dev ready url.
+You should see below the logged in user info.
+Make sure you change the response_type from response_type=code to response_type=token to use the implice Oauth2 flow.
+@if (User != null)
+{
+<div class="card">
+    <div class="card-body">
+        <div class="card-header">
+            @($"{User.Username}#{User.Discriminator}")
+        </div>
+        <div class="card-img">
+            <img src="@User.GetAvatarUrl()" />
+        </div>
+        <div class="card-text">
+            @User.Status
+        </div>
+    </div>
+    @if(RestToken != null){
+    <div class="card-body">
+        <div class="card-text">
+            Token: @RestToken.Token
+        </div>
+        <div class="card-text">
+            Refresh Token: @RestToken.RefreshToken
+        </div>
+    </div>
+}
+</div>}
+
+

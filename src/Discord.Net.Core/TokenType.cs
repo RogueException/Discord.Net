@@ -18,6 +18,15 @@ namespace Discord
         /// <summary>
         ///     A webhook token type.
         /// </summary>
-        Webhook
+        Webhook,
+        ///<summary>
+        ///     A refresh token used to get a new access token.
+        /// </summary>
+        Refresh,
+        ///<summary>
+        ///     The code used to get a Token through Oauth2
+        /// </summary>
+        Code
+
     }
 }

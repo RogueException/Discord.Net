@@ -43,6 +43,9 @@ namespace Discord.API
         public LoginState LoginState { get; private set; }
         public TokenType AuthTokenType { get; private set; }
         internal string AuthToken { get; private set; }
+        internal string ClientId { get; private set; }
+        private string ClientSecret { get; set; }
+
         internal IRestClient RestClient { get; private set; }
         internal ulong? CurrentUserId { get; set; }
         public RateLimitPrecision RateLimitPrecision { get; private set; }
@@ -52,7 +55,7 @@ namespace Discord.API
 
         /// <exception cref="ArgumentException">Unknown OAuth token type.</exception>
         public DiscordRestApiClient(RestClientProvider restClientProvider, string userAgent, RetryMode defaultRetryMode = RetryMode.AlwaysRetry,
-            JsonSerializer serializer = null, RateLimitPrecision rateLimitPrecision = RateLimitPrecision.Second, bool useSystemClock = true)
+            JsonSerializer serializer = null, RateLimitPrecision rateLimitPrecision = RateLimitPrecision.Second, bool useSystemClock = true, string clientId = null, string clientSecret = null)
         {
             _restClientProvider = restClientProvider;
             UserAgent = userAgent;
@@ -63,6 +66,10 @@ namespace Discord.API
 
             RequestQueue = new RequestQueue();
             _stateLock = new SemaphoreSlim(1, 1);
+
+            //this here is what we need for auto refreshes.
+            ClientId = clientId;
+            ClientSecret = clientSecret;
 
             SetBaseUrl(DiscordConfig.APIUrl);
         }
@@ -113,6 +120,13 @@ namespace Discord.API
             }
             finally { _stateLock.Release(); }
         }
+        /// <summary>
+        /// This method handles the "login" in the rest module. It simply sets the headers for the requests with the right header: authorization + bearer token.
+        /// </summary>
+        /// <param name="tokenType">The type of token used.</param>
+        /// <param name="token">The actual value of the token</param>
+        /// <param name="options">The optional options which are unused, so don't bother giving any I guess.</param>
+        /// <returns></returns>
         private async Task LoginInternalAsync(TokenType tokenType, string token, RequestOptions options = null)
         {
             if (LoginState != LoginState.LoggedOut)
@@ -127,7 +141,7 @@ namespace Discord.API
                 AuthToken = null;
                 await RequestQueue.SetCancelTokenAsync(_loginCancelToken.Token).ConfigureAwait(false);
                 RestClient.SetCancelToken(_loginCancelToken.Token);
-
+                
                 AuthTokenType = tokenType;
                 AuthToken = token?.TrimEnd();
                 if (tokenType != TokenType.Webhook)
@@ -141,7 +155,6 @@ namespace Discord.API
                 throw;
             }
         }
-
         public async Task LogoutAsync()
         {
             await _stateLock.WaitAsync().ConfigureAwait(false);
@@ -244,6 +257,20 @@ namespace Discord.API
             return DeserializeJson<TResponse>(await SendInternalAsync(method, endpoint, request).ConfigureAwait(false));
         }
 
+        internal Task<TResponse> SendFormAsync<TResponse>(string method, Expression<Func<string>> endpointExpr, IEnumerable<KeyValuePair<string?,string?>> payload, BucketIds ids,
+             ClientBucketType clientBucket = ClientBucketType.Unbucketed, RequestOptions options = null, [CallerMemberName] string funcName = null) where TResponse : class
+            => SendFormAsync<TResponse>(method, GetEndpoint(endpointExpr), payload, GetBucketId(method, ids, endpointExpr, funcName), clientBucket, options);
+        public async Task<TResponse> SendFormAsync<TResponse>(string method, string endpoint, IEnumerable<KeyValuePair<string?, string?>> payload,
+            BucketId bucketId = null, ClientBucketType clientBucket = ClientBucketType.Unbucketed, RequestOptions options = null) where TResponse : class
+        {
+            options = options ?? new RequestOptions();
+            options.BucketId = bucketId;
+
+            //string json = payload != null ? SerializeJson(payload) : null;
+            var request = new FormRestRequest(RestClient, method, endpoint, payload, options);
+            return DeserializeJson<TResponse>(await SendInternalAsync(method, endpoint, request).ConfigureAwait(false));
+        }
+
         internal Task<TResponse> SendMultipartAsync<TResponse>(string method, Expression<Func<string>> endpointExpr, IReadOnlyDictionary<string, object> multipartArgs, BucketIds ids,
              ClientBucketType clientBucket = ClientBucketType.Unbucketed, RequestOptions options = null, [CallerMemberName] string funcName = null)
             => SendMultipartAsync<TResponse>(method, GetEndpoint(endpointExpr), multipartArgs, GetBucketId(method, ids, endpointExpr, funcName), clientBucket, options);
@@ -281,6 +308,56 @@ namespace Discord.API
         {
             options = RequestOptions.CreateOrClone(options);
             await SendAsync("GET", () => "auth/login", new BucketIds(), options: options).ConfigureAwait(false);
+        }
+        /// <summary>
+        /// This method allows for retrieval of tokens from the Discord Api. It handles both code based authorizations and refresh tokens.
+        /// </summary>
+        /// <param name="tokenType">The type of token, either Code or Refresh.</param>
+        /// <param name="token">The value of the token.</param>
+        /// <param name="redirectUrl">The redirect url set in your application's oauth2 settings</param>
+        /// <param name="scopes">The scopes requested.</param>
+        /// <param name="options"></param>
+        /// <returns>Returns <see cref="Token"/> with the information about the retrieved token.</returns>
+        public async Task<Token> GetTokenAsync(TokenType tokenType, string token, string redirectUrl, IEnumerable<string> scopes, RequestOptions options = null)
+        {
+            Preconditions.NotNull(token, nameof(token));
+            options = RequestOptions.CreateOrClone(options);
+            options.IgnoreState = true; //we need to ignore the state since these calls would happen without being logged in.
+            
+            //for any case the Authorization header must be null
+            AuthToken = null;
+            if (tokenType == TokenType.Code)
+            {
+                //we then get the token with a code.
+                var kvp = new List<KeyValuePair<string, string>>
+                {
+                new KeyValuePair<string, string>("client_id" , ClientId),
+                new KeyValuePair<string, string>("client_secret", ClientSecret),
+                new KeyValuePair<string, string>("grant_type", "authorization_code"),
+                new KeyValuePair<string, string>("code", token),
+                new KeyValuePair<string, string>("redirect_uri", redirectUrl),
+                new KeyValuePair<string, string>("scope", string.Join(" ", scopes))
+                };
+
+                return await SendFormAsync<Token>("POST", () => "oauth2/token", kvp, new BucketIds(), options: options).ConfigureAwait(false);
+            }
+            else if (tokenType == TokenType.Refresh)
+            {
+                //we then refresh.
+                //we then get the token with a refresh token.
+                var kvp = new List<KeyValuePair<string, string>>
+                {
+                new KeyValuePair<string, string>("client_id" , ClientId),
+                new KeyValuePair<string, string>("client_secret", ClientSecret),
+                new KeyValuePair<string, string>("grant_type", "refresh_token"),
+                new KeyValuePair<string, string>("refresh_token", token),
+                new KeyValuePair<string, string>("redirect_uri", redirectUrl),
+                new KeyValuePair<string, string>("scope", string.Join(" ", scopes))
+                };
+
+                return await SendFormAsync<Token>("POST", () => "oauth2/token", kvp, new BucketIds(), options: options).ConfigureAwait(false);
+            }
+            throw new ArgumentException($"The provided TokenType is invalid: {tokenType}. Only user TokenType.Refresh or TokenType.Code with this method.");
         }
 
         //Gateway

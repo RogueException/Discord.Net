@@ -32,7 +32,9 @@ namespace Discord.Rest
             => new API.DiscordRestApiClient(config.RestClientProvider,
                 DiscordRestConfig.UserAgent,
                 rateLimitPrecision: config.RateLimitPrecision,
-                useSystemClock: config.UseSystemClock);
+                useSystemClock: config.UseSystemClock,
+                clientId: config.ClientId,
+                clientSecret: config.ClientSecret);
 
         internal override void Dispose(bool disposing)
         {
@@ -59,6 +61,10 @@ namespace Discord.Rest
         public async Task<RestApplication> GetApplicationInfoAsync(RequestOptions options = null)
         {
             return _applicationInfo ?? (_applicationInfo = await ClientHelper.GetApplicationInfoAsync(this, options).ConfigureAwait(false));
+        }
+        public async Task<RestToken> GetTokenAsync(TokenType tokenType, string token, string redirectUrl, IEnumerable<string> scopes, RequestOptions options = null)
+        {
+            return await ClientHelper.GetTokenAsync(this, tokenType, token, redirectUrl, scopes, options);
         }
 
         public Task<RestChannel> GetChannelAsync(ulong id, RequestOptions options = null)
