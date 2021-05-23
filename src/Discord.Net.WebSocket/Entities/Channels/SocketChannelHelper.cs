@@ -8,7 +8,7 @@ namespace Discord.WebSocket
 {
     internal static class SocketChannelHelper
     {
-        public static IAsyncEnumerable<IReadOnlyCollection<IMessage>> GetMessagesAsync(ISocketMessageChannel channel, DiscordSocketClient discord, MessageCache messages,
+        public static IAsyncEnumerable<IReadOnlyCollection<IMessage>> GetMessagesAsync(ISocketMessageChannel channel, DiscordSocketClient discord, IMessageCache messages,
             ulong? fromMessageId, Direction dir, int limit, CacheMode mode, RequestOptions options)
         {
             if (dir == Direction.After && fromMessageId == null)
@@ -54,7 +54,7 @@ namespace Discord.WebSocket
                 return ChannelHelper.GetMessagesAsync(channel, discord, fromMessageId, dir, limit, options);
             }
         }
-        public static IReadOnlyCollection<SocketMessage> GetCachedMessages(ISocketMessageChannel channel, DiscordSocketClient discord, MessageCache messages,
+        public static IReadOnlyCollection<SocketMessage> GetCachedMessages(ISocketMessageChannel channel, DiscordSocketClient discord, IMessageCache messages,
             ulong? fromMessageId, Direction dir, int limit)
         {
             if (messages != null) //Cache enabled

@@ -17,6 +17,7 @@ namespace Discord.WebSocket
         ///     A read-only collection of WebSocket-based messages.
         /// </returns>
         IReadOnlyCollection<SocketMessage> CachedMessages { get; }
+        IMessageCache MessageCache { get; }
 
         /// <summary>
         ///     Sends a message to this message channel.

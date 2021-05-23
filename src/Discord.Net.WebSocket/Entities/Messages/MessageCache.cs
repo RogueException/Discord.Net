@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Discord.WebSocket
 {
-    internal class MessageCache
+    public class MessageCache : IMessageCache
     {
         private readonly ConcurrentDictionary<ulong, SocketMessage> _messages;
         private readonly ConcurrentQueue<ulong> _orderedMessages;
@@ -14,9 +14,11 @@ namespace Discord.WebSocket
 
         public IReadOnlyCollection<SocketMessage> Messages => _messages.ToReadOnlyCollection();
 
-        public MessageCache(DiscordSocketClient discord)
+        public IMessageCache CreateMessageCache(int size) => new MessageCache(size);
+
+        public MessageCache(int size)
         {
-            _size = discord.MessageCacheSize;
+            _size = size;
             _messages = new ConcurrentDictionary<ulong, SocketMessage>(ConcurrentHashSet.DefaultConcurrencyLevel, (int)(_size * 1.05));
             _orderedMessages = new ConcurrentQueue<ulong>();
         }

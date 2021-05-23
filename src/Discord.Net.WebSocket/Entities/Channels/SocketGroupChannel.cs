@@ -20,7 +20,7 @@ namespace Discord.WebSocket
     [DebuggerDisplay(@"{DebuggerDisplay,nq}")]
     public class SocketGroupChannel : SocketChannel, IGroupChannel, ISocketPrivateChannel, ISocketMessageChannel, ISocketAudioChannel
     {
-        private readonly MessageCache _messages;
+        private readonly IMessageCache _messages;
         private readonly ConcurrentDictionary<ulong, SocketVoiceState> _voiceStates;
 
         private string _iconId;
@@ -31,6 +31,7 @@ namespace Discord.WebSocket
 
         /// <inheritdoc />
         public IReadOnlyCollection<SocketMessage> CachedMessages => _messages?.Messages ?? ImmutableArray.Create<SocketMessage>();
+        public IMessageCache MessageCache => _messages;
         public new IReadOnlyCollection<SocketGroupUser> Users => _users.ToReadOnlyCollection();
         public IReadOnlyCollection<SocketGroupUser> Recipients
             => _users.Select(x => x.Value).Where(x => x.Id != Discord.CurrentUser.Id).ToReadOnlyCollection(() => _users.Count - 1);
@@ -38,8 +39,7 @@ namespace Discord.WebSocket
         internal SocketGroupChannel(DiscordSocketClient discord, ulong id)
             : base(discord, id)
         {
-            if (Discord.MessageCacheSize > 0)
-                _messages = new MessageCache(Discord);
+            _messages = discord.MessageCache.CreateMessageCache(discord.MessageCacheSize);
             _voiceStates = new ConcurrentDictionary<ulong, SocketVoiceState>(ConcurrentHashSet.DefaultConcurrencyLevel, 5);
             _users = new ConcurrentDictionary<ulong, SocketGroupUser>(ConcurrentHashSet.DefaultConcurrencyLevel, 5);
         }

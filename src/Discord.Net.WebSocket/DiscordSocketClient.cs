@@ -66,6 +66,7 @@ namespace Discord.WebSocket
         //From DiscordSocketConfig
         internal int TotalShards { get; private set; }
         internal int MessageCacheSize { get; private set; }
+        internal IMessageCache MessageCache { get; private set; }
         internal int LargeThreshold { get; private set; }
         internal ClientState State { get; private set; }
         internal UdpSocketProvider UdpSocketProvider { get; private set; }
@@ -131,6 +132,7 @@ namespace Discord.WebSocket
             ShardId = config.ShardId ?? 0;
             TotalShards = config.TotalShards ?? 1;
             MessageCacheSize = config.MessageCacheSize;
+            MessageCache = config.MessageCache;
             LargeThreshold = config.LargeThreshold;
             UdpSocketProvider = config.UdpSocketProvider;
             WebSocketProvider = config.WebSocketProvider;

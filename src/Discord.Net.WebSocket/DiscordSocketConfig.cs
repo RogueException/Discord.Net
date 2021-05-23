@@ -57,6 +57,8 @@ namespace Discord.WebSocket
         /// </summary>
         public int MessageCacheSize { get; set; } = 0;
 
+        public IMessageCache MessageCache { get; set; } = null;
+
         /// <summary>
         ///     Gets or sets the max number of users a guild may have for offline users to be included in the READY
         ///     packet. The maximum value allowed is 250.
@@ -188,6 +190,7 @@ namespace Discord.WebSocket
         {
             WebSocketProvider = DefaultWebSocketProvider.Instance;
             UdpSocketProvider = DefaultUdpSocketProvider.Instance;
+            MessageCache = new MessageCache(MessageCacheSize);
         }
 
         internal DiscordSocketConfig Clone() => MemberwiseClone() as DiscordSocketConfig;
