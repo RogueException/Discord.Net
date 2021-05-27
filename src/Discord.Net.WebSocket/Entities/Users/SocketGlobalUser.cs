@@ -47,7 +47,7 @@ namespace Discord.WebSocket
                     discord.RemoveUser(Id);
             }
         }
-        
+
         internal void Update(ClientState state, PresenceModel model)
         {
             Presence = SocketPresence.Create(model);

@@ -821,7 +821,15 @@ namespace Discord.WebSocket
         /// <inheritdoc />
         public Task<int> PruneUsersAsync(int days = 30, bool simulate = false, RequestOptions options = null, IEnumerable<ulong> includeRoleIds = null)
             => GuildHelper.PruneUsersAsync(this, Discord, days, simulate, options, includeRoleIds);
-
+        /// <summary>
+        ///     Clears this guild's user cache.
+        /// </summary>
+        public void ClearUserCache() => PurgeGuildUserCache();
+        /// <summary>
+        ///     Clears this guild's user cache.
+        /// </summary>
+        /// <param name="predicate">The predicate used to select which users to clear.</param>
+        public void ClearUserCache(Func<SocketGuildUser, bool> predicate) => PurgeGuildUserCache(predicate);
         internal SocketGuildUser AddOrUpdateUser(UserModel model)
         {
             if (_members.TryGetValue(model.Id, out SocketGuildUser member))
@@ -877,21 +885,20 @@ namespace Discord.WebSocket
             }
             return null;
         }
-        internal void PurgeGuildUserCache()
+        internal void PurgeGuildUserCache() => PurgeGuildUserCache(x => true);
+        internal void PurgeGuildUserCache(Func<SocketGuildUser, bool> predicate)
         {
-            var members = Users;
-            var self = CurrentUser;
-            _members.Clear();
-            if (self != null)
-                _members.TryAdd(self.Id, self);
+            var membersToPurge = Users.Where(x => predicate.Invoke(x) && x?.Id != Discord.CurrentUser.Id);
+            var membersToKeep = Users.Where(x => !predicate.Invoke(x) || x?.Id == Discord.CurrentUser.Id);
+
+            foreach (var member in membersToPurge)
+                if(_members.TryRemove(member.Id, out _))
+                    member.GlobalUser.RemoveRef(Discord);
+
+            foreach (var member in membersToKeep)
+                _members.TryAdd(member.Id, member);
 
             DownloadedMemberCount = _members.Count;
-
-            foreach (var member in members)
-            {
-                if (member.Id != self?.Id)
-                    member.GlobalUser.RemoveRef(Discord);
-            }
         }
 
         /// <summary>
