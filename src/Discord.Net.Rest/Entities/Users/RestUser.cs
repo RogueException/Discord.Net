@@ -33,7 +33,11 @@ namespace Discord.Rest
         /// <inheritdoc />
         public virtual IActivity Activity => null;
         /// <inheritdoc />
-        public virtual UserStatus Status => UserStatus.Offline;
+        /// <remarks>
+        /// Returns <see cref="UserStatus.Offline"/> always as REST API doesn't return Status.
+        /// Use Gateway <c>GetUser</c> on the ID to get the status.
+        /// </remarks>
+        public virtual UserStatus Status => UserStatus.Offline;	
         /// <inheritdoc />
         public virtual IImmutableSet<ClientType> ActiveClients => ImmutableHashSet<ClientType>.Empty;
         /// <inheritdoc />
