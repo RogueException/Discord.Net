@@ -8,6 +8,7 @@ namespace Discord.Commands
     /// </summary>
     public abstract class TypeReader
     {
+        internal bool IsOverride { get; set; } = false;
         /// <summary>
         ///     Attempts to parse the <paramref name="input"/> into the desired type.
         /// </summary>

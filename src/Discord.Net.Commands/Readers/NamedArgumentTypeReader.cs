@@ -136,8 +136,8 @@ namespace Discord.Commands
                 var overridden = prop.GetCustomAttribute<OverrideTypeReaderAttribute>();
                 var reader = (overridden != null)
                     ? ModuleClassBuilder.GetTypeReader(_commands, elemType, overridden.TypeReader, services)
-                    : (_commands.GetDefaultTypeReader(elemType)
-                        ?? _commands.GetTypeReaders(elemType).FirstOrDefault().Value);
+                    : (_commands.GetTypeReaders(elemType, false)?.FirstOrDefault().Value
+                        ?? _commands.GetDefaultTypeReader(elemType));
 
                 if (reader != null)
                 {

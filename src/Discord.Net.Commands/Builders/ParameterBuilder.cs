@@ -60,7 +60,7 @@ namespace Discord.Commands.Builders
             if (type.GetTypeInfo().GetCustomAttribute<NamedArgumentTypeAttribute>() != null)
             {
                 IsRemainder = true;
-                var reader = commands.GetTypeReaders(type)?.FirstOrDefault().Value;
+                var reader = commands.GetTypeReaders(type, false)?.FirstOrDefault().Value;
                 if (reader == null)
                 {
                     Type readerType;
@@ -80,8 +80,7 @@ namespace Discord.Commands.Builders
                 return reader;
             }
 
-
-            var readers = commands.GetTypeReaders(type);
+            var readers = commands.GetTypeReaders(type, false);
             if (readers != null)
                 return readers.FirstOrDefault().Value;
             else

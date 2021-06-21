@@ -276,24 +276,23 @@ namespace Discord.Commands
 
             if (builder.TypeReader == null)
             {
-                builder.TypeReader = service.GetDefaultTypeReader(paramType)
-                    ?? service.GetTypeReaders(paramType)?.FirstOrDefault().Value;
+                builder.TypeReader = service.GetTypeReaders(paramType, false)?.FirstOrDefault().Value
+                    ?? service.GetDefaultTypeReader(paramType);
             }
         }
 
         internal static TypeReader GetTypeReader(CommandService service, Type paramType, Type typeReaderType, IServiceProvider services)
         {
-            var readers = service.GetTypeReaders(paramType);
-            TypeReader reader = null;
+            var readers = service.GetTypeReaders(paramType, true);
             if (readers != null)
-            {
-                if (readers.TryGetValue(typeReaderType, out reader))
-                    return reader;
-            }
+                foreach (var kvp in readers)
+                    if (kvp.Key == typeReaderType)
+                        return kvp.Value;
 
             //We dont have a cached type reader, create one
-            reader = ReflectionUtils.CreateObject<TypeReader>(typeReaderType.GetTypeInfo(), service, services);
-            service.AddTypeReader(paramType, reader, false);
+            TypeReader reader = ReflectionUtils.CreateObject<TypeReader>(typeReaderType.GetTypeInfo(), service, services);
+            reader.IsOverride = true;
+            service.AddTypeReader(paramType, reader);
 
             return reader;
         }

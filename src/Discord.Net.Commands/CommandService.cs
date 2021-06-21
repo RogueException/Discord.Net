@@ -48,6 +48,7 @@ namespace Discord.Commands
         private readonly SemaphoreSlim _moduleLock;
         private readonly ConcurrentDictionary<Type, ModuleInfo> _typedModuleDefs;
         private readonly ConcurrentDictionary<Type, ConcurrentDictionary<Type, TypeReader>> _typeReaders;
+        private readonly ConcurrentDictionary<Type, ConcurrentQueue<Type>> _userEntityTypeReaders;
         private readonly ConcurrentDictionary<Type, TypeReader> _defaultTypeReaders;
         private readonly ImmutableList<(Type EntityType, Type TypeReaderType)> _entityTypeReaders;
         private readonly HashSet<ModuleInfo> _moduleDefs;
@@ -76,6 +77,15 @@ namespace Discord.Commands
         ///     Represents all <see cref="TypeReader" /> loaded within <see cref="CommandService"/>.
         /// </summary>
         public ILookup<Type, TypeReader> TypeReaders => _typeReaders.SelectMany(x => x.Value.Select(y => new { y.Key, y.Value })).ToLookup(x => x.Key, x => x.Value);
+
+        /// <summary>
+        ///     Represents all entity type reader <see cref="Type" />s loaded within <see cref="CommandService"/>.
+        /// </summary>
+        /// <returns>
+        ///     A <see cref="ILookup{TKey, TElement}"/>; the key is the object type to be read by the <see cref="TypeReader"/>,
+        ///     while the element is the type of the <see cref="TypeReader"/> generic definition.
+        /// </returns>
+        public ILookup<Type, Type> EntityTypeReaders => _userEntityTypeReaders.SelectMany(x => x.Value.Select(y => new { x.Key, TypeReaderType = y })).ToLookup(x => x.Key, y => y.TypeReaderType);
 
         /// <summary>
         ///     Initializes a new <see cref="CommandService"/> class.
@@ -109,6 +119,7 @@ namespace Discord.Commands
             _moduleDefs = new HashSet<ModuleInfo>();
             _map = new CommandMap(this);
             _typeReaders = new ConcurrentDictionary<Type, ConcurrentDictionary<Type, TypeReader>>();
+            _userEntityTypeReaders = new ConcurrentDictionary<Type, ConcurrentQueue<Type>>();
 
             _defaultTypeReaders = new ConcurrentDictionary<Type, TypeReader>();
             foreach (var type in PrimitiveParsers.SupportedTypes)
@@ -329,8 +340,6 @@ namespace Discord.Commands
         ///     type.
         ///     If <typeparamref name="T" /> is a <see cref="ValueType" />, a nullable <see cref="TypeReader" /> will
         ///     also be added.
-        ///     If a default <see cref="TypeReader" /> exists for <typeparamref name="T" />, a warning will be logged
-        ///     and the default <see cref="TypeReader" /> will be replaced.
         /// </summary>
         /// <typeparam name="T">The object type to be read by the <see cref="TypeReader"/>.</typeparam>
         /// <param name="reader">An instance of the <see cref="TypeReader" /> to be added.</param>
@@ -341,17 +350,49 @@ namespace Discord.Commands
         ///     type.
         ///     If <paramref name="type" /> is a <see cref="ValueType" />, a nullable <see cref="TypeReader" /> for the
         ///     value type will also be added.
-        ///     If a default <see cref="TypeReader" /> exists for <paramref name="type" />, a warning will be logged and
-        ///     the default <see cref="TypeReader" /> will be replaced.
         /// </summary>
         /// <param name="type">A <see cref="Type" /> instance for the type to be read.</param>
         /// <param name="reader">An instance of the <see cref="TypeReader" /> to be added.</param>
         public void AddTypeReader(Type type, TypeReader reader)
         {
-            if (_defaultTypeReaders.ContainsKey(type))
-                _ = _cmdLogger.WarningAsync($"The default TypeReader for {type.FullName} was replaced by {reader.GetType().FullName}." +
-                    "To suppress this message, use AddTypeReader<T>(reader, true).");
-            AddTypeReader(type, reader, true);
+            var readers = _typeReaders.GetOrAdd(type, x => new ConcurrentDictionary<Type, TypeReader>());
+            readers[reader.GetType()] = reader;
+
+            if (type.GetTypeInfo().IsValueType)
+                AddNullableTypeReader(type, reader);
+        }
+        /// <summary>
+        ///     Adds a custom entity <see cref="TypeReader" /> to this <see cref="CommandService" /> for the supplied
+        ///     object type.
+        /// </summary>
+        /// <example>
+        ///     <para>The following example adds a custom entity reader to this <see cref="CommandService"/>.</para>
+        ///     <code language="cs" region="AddEntityTypeReader"
+        ///           source="..\Discord.Net.Examples\Commands\CommandService.Examples.cs" />
+        /// </example>
+        /// <typeparam name="T">The object type to be read by the <see cref="TypeReader"/>.</typeparam>
+        /// <param name="typeReaderGenericType">A generic type definition (with one open argument) of the <see cref="TypeReader" />.</param>
+        public void AddEntityTypeReader<T>(Type typeReaderGenericType)
+            => AddEntityTypeReader(typeof(T), typeReaderGenericType);
+        /// <summary>
+        ///     Adds a custom entity <see cref="TypeReader" /> to this <see cref="CommandService" /> for the supplied
+        ///     object type.
+        /// </summary>
+        /// <param name="type">A <see cref="Type" /> instance for the type to be read.</param>
+        /// <param name="typeReaderGenericType">A generic type definition (with one open argument) of the <see cref="TypeReader" />.</param>
+        public void AddEntityTypeReader(Type type, Type typeReaderGenericType)
+        {
+            if (!typeReaderGenericType.IsGenericTypeDefinition)
+                throw new ArgumentException("TypeReader type must be a generic type definition.", nameof(typeReaderGenericType));
+            Type[] genericArgs = typeReaderGenericType.GetGenericArguments();
+            if (genericArgs.Length != 1)
+                throw new ArgumentException("TypeReader type must accept one and only one open generic argument.", nameof(typeReaderGenericType));
+            if (!genericArgs[0].IsGenericParameter)
+                throw new ArgumentException("TypeReader type must accept one and only one open generic argument.", nameof(typeReaderGenericType));
+            if (!genericArgs[0].GenericParameterAttributes.HasFlag(GenericParameterAttributes.ReferenceTypeConstraint))
+                throw new ArgumentException("TypeReader generic argument must have a reference type constraint.", nameof(typeReaderGenericType));
+            var readers = _userEntityTypeReaders.GetOrAdd(type, x => new ConcurrentQueue<Type>());
+            readers.Enqueue(typeReaderGenericType);
         }
         /// <summary>
         ///     Adds a custom <see cref="TypeReader" /> to this <see cref="CommandService" /> for the supplied object
@@ -359,14 +400,20 @@ namespace Discord.Commands
         ///     If <typeparamref name="T" /> is a <see cref="ValueType" />, a nullable <see cref="TypeReader" /> will
         ///     also be added.
         /// </summary>
+        /// <example>
+        ///     <para>The following example adds a custom entity reader to this <see cref="CommandService"/>.</para>
+        ///     <code language="cs" region="AddEntityTypeReader2"
+        ///           source="..\Discord.Net.Examples\Commands\CommandService.Examples.cs" />
+        /// </example>
         /// <typeparam name="T">The object type to be read by the <see cref="TypeReader"/>.</typeparam>
         /// <param name="reader">An instance of the <see cref="TypeReader" /> to be added.</param>
         /// <param name="replaceDefault">
         ///     Defines whether the <see cref="TypeReader"/> should replace the default one for
         ///     <see cref="Type" /> if it exists.
         /// </param>
+        [Obsolete("This method is deprecated. Use the method without the replaceDefault argument.")]
         public void AddTypeReader<T>(TypeReader reader, bool replaceDefault)
-            => AddTypeReader(typeof(T), reader, replaceDefault);
+            => AddTypeReader(typeof(T), reader);
         /// <summary>
         ///     Adds a custom <see cref="TypeReader" /> to this <see cref="CommandService" /> for the supplied object
         ///     type.
@@ -379,27 +426,10 @@ namespace Discord.Commands
         ///     Defines whether the <see cref="TypeReader"/> should replace the default one for <see cref="Type" /> if
         ///     it exists.
         /// </param>
+        [Obsolete("This method is deprecated. Use the method without the replaceDefault argument.")]
         public void AddTypeReader(Type type, TypeReader reader, bool replaceDefault)
-        {
-            if (replaceDefault && HasDefaultTypeReader(type))
-            {
-                _defaultTypeReaders.AddOrUpdate(type, reader, (k, v) => reader);
-                if (type.GetTypeInfo().IsValueType)
-                {
-                    var nullableType = typeof(Nullable<>).MakeGenericType(type);
-                    var nullableReader = NullableTypeReader.Create(type, reader);
-                    _defaultTypeReaders.AddOrUpdate(nullableType, nullableReader, (k, v) => nullableReader);
-                }
-            }
-            else
-            {
-                var readers = _typeReaders.GetOrAdd(type, x => new ConcurrentDictionary<Type, TypeReader>());
-                readers[reader.GetType()] = reader;
+            => AddTypeReader(type, reader);
 
-                if (type.GetTypeInfo().IsValueType)
-                    AddNullableTypeReader(type, reader);
-            }
-        }
         internal bool HasDefaultTypeReader(Type type)
         {
             if (_defaultTypeReaders.ContainsKey(type))
@@ -416,10 +446,39 @@ namespace Discord.Commands
             var nullableReader = NullableTypeReader.Create(valueType, valueTypeReader);
             readers[nullableReader.GetType()] = nullableReader;
         }
-        internal IDictionary<Type, TypeReader> GetTypeReaders(Type type)
+        internal IEnumerable<KeyValuePair<Type, TypeReader>> GetTypeReaders(Type type, bool includeOverride)
         {
             if (_typeReaders.TryGetValue(type, out var definedTypeReaders))
-                return definedTypeReaders;
+                return includeOverride ? definedTypeReaders : definedTypeReaders.Where(x => !x.Value.IsOverride);
+
+            var assignableEntityReaders = _userEntityTypeReaders.Where(x => x.Key.IsAssignableFrom(type));
+
+            int assignableTo = -1;
+            KeyValuePair<Type, ConcurrentQueue<Type>>? entityReaders = null;
+            foreach (var entityReader in assignableEntityReaders)
+            {
+                int assignables = assignableEntityReaders.Sum(x => !x.Equals(entityReader) && x.Key.IsAssignableFrom(entityReader.Key) ? 1 : 0);
+                if (assignableTo == -1)
+                {
+                    // First time
+                    assignableTo = assignables;
+                    entityReaders = entityReader;
+                }
+                // Try to get the most specific type reader, i.e. IMessageChannel is assignable to IChannel, but not the inverse
+                else if (assignables > assignableTo)
+                {
+                    assignableTo = assignables;
+                    entityReaders = entityReader;
+                }
+            }
+
+            if (entityReaders != null)
+            {
+                var entityTypeReaderType = entityReaders.Value.Value.First();
+                TypeReader reader = Activator.CreateInstance(entityTypeReaderType.MakeGenericType(type)) as TypeReader;
+                AddTypeReader(type, reader);
+                return GetTypeReaders(type, false);
+            }
             return null;
         }
         internal TypeReader GetDefaultTypeReader(Type type)
