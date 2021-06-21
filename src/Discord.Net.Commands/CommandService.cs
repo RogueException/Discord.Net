@@ -197,6 +197,12 @@ namespace Discord.Commands
                 if (_typedModuleDefs.ContainsKey(type))
                     throw new ArgumentException("This module has already been added.");
 
+                bool isModuleType = await typeInfo.IsValidModuleType(logger: _cmdLogger);
+                if(!isModuleType)
+                {
+                    throw new InvalidOperationException($"Type {typeInfo.FullName} cannot be transformed into a module. Look at the logs for more details.");
+                }
+
                 var module = (await ModuleClassBuilder.BuildAsync(this, services, typeInfo).ConfigureAwait(false)).FirstOrDefault();
 
                 if (module.Value == default(ModuleInfo))
@@ -227,16 +233,17 @@ namespace Discord.Commands
             await _moduleLock.WaitAsync().ConfigureAwait(false);
             try
             {
-                var types = await ModuleClassBuilder.SearchAsync(assembly, this).ConfigureAwait(false);
-                var moduleDefs = await ModuleClassBuilder.BuildAsync(types, this, services).ConfigureAwait(false);
+                (var types, var dependencies) = await ModuleClassBuilder.SearchAsync(assembly, this).ConfigureAwait(false);
+                var standardModuleDefs = await ModuleClassBuilder.BuildAsync(types, this, services, dependencies).ConfigureAwait(false);
 
-                foreach (var info in moduleDefs)
+                foreach (var info in standardModuleDefs)
                 {
                     _typedModuleDefs[info.Key] = info.Value;
                     LoadModuleInternal(info.Value);
                 }
 
-                return moduleDefs.Select(x => x.Value).ToImmutableArray();
+                var moduleDefs = new List<ModuleInfo>(standardModuleDefs.Values);
+                return moduleDefs.ToImmutableArray();
             }
             finally
             {

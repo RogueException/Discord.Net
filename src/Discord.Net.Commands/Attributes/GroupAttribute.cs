@@ -13,6 +13,12 @@ namespace Discord.Commands
         /// </summary>
         public string Prefix { get; }
 
+        /// <summary>
+        ///     Uses this module as the parent.
+        ///     <para>Useful when group modules are large and nesting them within the parent class becomes difficult to maintain.</para>
+        /// </summary>
+        public Type ParentModule { get; set; }
+
         /// <inheritdoc />
         public GroupAttribute()
         {
