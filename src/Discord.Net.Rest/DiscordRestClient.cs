@@ -39,6 +39,14 @@ namespace Discord.Rest
             base.Dispose(disposing);
         }
 
+        internal override async ValueTask DisposeAsync(bool disposing)
+        {
+            if (disposing)
+                await ApiClient.DisposeAsync().ConfigureAwait(false);
+
+            base.Dispose(disposing);
+        }
+
         /// <inheritdoc />
         internal override async Task OnLoginAsync(TokenType tokenType, string token)
         {

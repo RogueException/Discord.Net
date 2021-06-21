@@ -145,8 +145,23 @@ namespace Discord.Rest
                 _isDisposed = true;
             }
         }
+
+        internal virtual async ValueTask DisposeAsync(bool disposing)
+        {
+            if (!_isDisposed)
+            {
+#pragma warning disable IDISP007
+                await ApiClient.DisposeAsync().ConfigureAwait(false);
+#pragma warning restore IDISP007
+                _stateLock?.Dispose();
+                _isDisposed = true;
+            }
+        }
+
         /// <inheritdoc />
         public void Dispose() => Dispose(true);
+
+        public ValueTask DisposeAsync() => DisposeAsync(true);
 
         /// <inheritdoc />
         public Task<int> GetRecommendedShardCountAsync(RequestOptions options = null)

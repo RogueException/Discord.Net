@@ -22,7 +22,7 @@ using System.Threading.Tasks;
 
 namespace Discord.API
 {
-    internal class DiscordRestApiClient : IDisposable
+    internal class DiscordRestApiClient : IDisposable, IAsyncDisposable
     {
         private static readonly ConcurrentDictionary<string, Func<BucketIds, BucketId>> _bucketIdGenerators = new ConcurrentDictionary<string, Func<BucketIds, BucketId>>();
 
@@ -98,7 +98,28 @@ namespace Discord.API
                 _isDisposed = true;
             }
         }
+
+        internal virtual async ValueTask DisposeAsync(bool disposing)
+        {
+            if (!_isDisposed)
+            {
+                if (disposing)
+                {
+                    _loginCancelToken?.Dispose();
+                    RestClient?.Dispose();
+
+                    if (!(RequestQueue is null))
+                        await RequestQueue.DisposeAsync().ConfigureAwait(false);
+
+                    _stateLock?.Dispose();
+                }
+                _isDisposed = true;
+            }
+        }
+
         public void Dispose() => Dispose(true);
+
+        public ValueTask DisposeAsync() => DisposeAsync(true);
 
         public async Task LoginAsync(TokenType tokenType, string token, RequestOptions options = null)
         {

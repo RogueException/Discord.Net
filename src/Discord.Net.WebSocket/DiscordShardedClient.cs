@@ -445,5 +445,25 @@ namespace Discord.WebSocket
 
             base.Dispose(disposing);
         }
+
+        internal override ValueTask DisposeAsync(bool disposing)
+        {
+            if (!_isDisposed)
+            {
+                if (disposing)
+                {
+                    if (_shards != null)
+                    {
+                        foreach (var client in _shards)
+                            client?.Dispose();
+                    }
+                    _connectionGroupLock?.Dispose();
+                }
+
+                _isDisposed = true;
+            }
+
+            return base.DisposeAsync(disposing);
+        }
     }
 }

@@ -8,7 +8,7 @@ namespace Discord
     /// <summary>
     ///     Represents a generic Discord client.
     /// </summary>
-    public interface IDiscordClient : IDisposable
+    public interface IDiscordClient : IDisposable, IAsyncDisposable
     {
         /// <summary>
         ///     Gets the current state of connection.
