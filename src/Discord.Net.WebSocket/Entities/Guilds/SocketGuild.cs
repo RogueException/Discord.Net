@@ -174,24 +174,18 @@ namespace Discord.WebSocket
                 return id.HasValue ? GetVoiceChannel(id.Value) : null;
             }
         }
-        /// <summary>
-        ///     Gets the max bitrate for voice channels in this guild.
-        /// </summary>
-        /// <returns>
-        ///     A <see cref="int"/> representing the maximum bitrate value allowed by Discord in this guild.
-        /// </returns>
+        /// <inheritdoc/>
         public int MaxBitrate
         {
             get
             {
-                var maxBitrate = PremiumTier switch
+                return PremiumTier switch
                 {
                     PremiumTier.Tier1 => 128000,
                     PremiumTier.Tier2 => 256000,
                     PremiumTier.Tier3 => 384000,
                     _ => 96000,
                 };
-                return maxBitrate;
             }
         }
         /// <summary>
