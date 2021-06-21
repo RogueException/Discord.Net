@@ -39,6 +39,7 @@ namespace Discord.Audio
         private readonly ConcurrentDictionary<uint, ulong> _ssrcMap;
         private readonly ConcurrentDictionary<ulong, StreamPair> _streams;
 
+        private int _heartbeatInterval;
         private Task _heartbeatTask, _keepaliveTask;
         private long _lastMessageTime;
         private string _url, _sessionId, _token;
@@ -75,6 +76,7 @@ namespace Discord.Audio
                 OnConnectingAsync, OnDisconnectingAsync, x => ApiClient.Disconnected += x);
             _connection.Connected += () => _connectedEvent.InvokeAsync();
             _connection.Disconnected += (ex, recon) => _disconnectedEvent.InvokeAsync(ex);
+            _heartbeatInterval = 41250;
             _heartbeatTimes = new ConcurrentQueue<long>();
             _keepaliveTimes = new ConcurrentQueue<KeyValuePair<ulong, int>>();
             _ssrcMap = new ConcurrentDictionary<uint, ulong>();
@@ -222,6 +224,14 @@ namespace Discord.Audio
             {
                 switch (opCode)
                 {
+                    case VoiceOpCode.Hello:
+                        {
+                            await _audioLogger.DebugAsync("Received Hello").ConfigureAwait(false);
+                            var data = (payload as JToken).ToObject<HelloEvent>(_serializer);
+
+                            _heartbeatInterval = data.HeartbeatInterval;
+                        }
+                        break;
                     case VoiceOpCode.Ready:
                         {
                             await _audioLogger.DebugAsync("Received Ready").ConfigureAwait(false);
@@ -236,7 +246,7 @@ namespace Discord.Audio
                             await ApiClient.SendDiscoveryAsync(_ssrc).ConfigureAwait(false);
 
 
-                            _heartbeatTask = RunHeartbeatAsync(41250, _connection.CancelToken);
+                            _heartbeatTask = RunHeartbeatAsync(_heartbeatInterval - 1000, _connection.CancelToken); // reserve a delay time of network
                         }
                         break;
                     case VoiceOpCode.SessionDescription:
