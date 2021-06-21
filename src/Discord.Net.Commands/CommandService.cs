@@ -435,6 +435,13 @@ namespace Discord.Commands
                 _defaultTypeReaders[type] = reader;
                 return reader;
             }
+            var underlyingType = Nullable.GetUnderlyingType(type);
+            if (underlyingType != null && underlyingType.IsEnum)
+            {
+                reader = NullableTypeReader.Create(underlyingType, EnumTypeReader.GetReader(underlyingType));
+                _defaultTypeReaders[type] = reader;
+                return reader;
+            }
 
             //Is this an entity?
             for (int i = 0; i < _entityTypeReaders.Count; i++)
