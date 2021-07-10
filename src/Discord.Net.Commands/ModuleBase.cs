@@ -56,6 +56,15 @@ namespace Discord.Commands
         }
 
         /// <summary>
+        ///     The method to execute when an exception is thrown
+        /// </summary>
+        /// <param name="command"></param>
+        /// <param name="exception"></param>
+        protected virtual void OnException(CommandInfo command, Exception exception)
+        {
+        }
+
+        /// <summary>
         ///     The method to execute when building the module.
         /// </summary>
         /// <param name="commandService">The <see cref="CommandService"/> used to create the module.</param>
@@ -72,6 +81,7 @@ namespace Discord.Commands
         }
         void IModuleBase.BeforeExecute(CommandInfo command) => BeforeExecute(command);
         void IModuleBase.AfterExecute(CommandInfo command) => AfterExecute(command);
+        void IModuleBase.OnException(CommandInfo command, Exception exception) => OnException(command, exception);
         void IModuleBase.OnModuleBuilding(CommandService commandService, ModuleBuilder builder) => OnModuleBuilding(commandService, builder);
     }
 }

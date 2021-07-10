@@ -220,6 +220,11 @@ namespace Discord.Commands
                         return ExecuteResult.FromSuccess();
                     }
                 }
+                catch (Exception exception)
+                {
+                    instance.OnException(cmd, exception);
+                    return ExecuteResult.FromError(exception);
+                }
                 finally
                 {
                     instance.AfterExecute(cmd);

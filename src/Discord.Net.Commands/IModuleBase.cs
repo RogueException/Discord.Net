@@ -1,3 +1,4 @@
+using System;
 using Discord.Commands.Builders;
 
 namespace Discord.Commands
@@ -9,6 +10,8 @@ namespace Discord.Commands
         void BeforeExecute(CommandInfo command);
         
         void AfterExecute(CommandInfo command);
+
+        void OnException(CommandInfo command, Exception exception);
 
         void OnModuleBuilding(CommandService commandService, ModuleBuilder builder);
     }
