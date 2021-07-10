@@ -77,6 +77,12 @@ namespace Discord.WebSocket
             => await Guild.DisconnectAudioAsync();
 
         /// <inheritdoc />
+        public async Task ModifyAsync(Action<AudioChannelProperties> func, RequestOptions options = null)
+        {
+            await Guild.ModifyAudioAsync(Id, func, options).ConfigureAwait(false);
+        }
+
+        /// <inheritdoc />
         public override SocketGuildUser GetUser(ulong id)
         {
             var user = Guild.GetUser(id);

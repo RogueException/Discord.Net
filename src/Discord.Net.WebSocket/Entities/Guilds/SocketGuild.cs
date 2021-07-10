@@ -1,3 +1,4 @@
+using Discord.API.Gateway;
 using Discord.Audio;
 using Discord.Rest;
 using System;
@@ -39,6 +40,7 @@ namespace Discord.WebSocket
         private ImmutableArray<GuildEmote> _emotes;
         private ImmutableArray<string> _features;
         private AudioClient _audioClient;
+        private VoiceStateUpdateParams _voiceStateUpdateParams;
 #pragma warning restore IDISP002, IDISP006
 
         /// <inheritdoc />
@@ -1054,11 +1056,19 @@ namespace Discord.WebSocket
                 promise = new TaskCompletionSource<AudioClient>();
                 _audioConnectPromise = promise;
 
+                _voiceStateUpdateParams = new VoiceStateUpdateParams
+                {
+                    GuildId = Id,
+                    ChannelId = channelId,
+                    SelfDeaf = selfDeaf,
+                    SelfMute = selfMute
+                };
+
                 if (external)
                 {
 #pragma warning disable IDISP001
                     var _ = promise.TrySetResultAsync(null);
-                    await Discord.ApiClient.SendVoiceStateUpdateAsync(Id, channelId, selfDeaf, selfMute).ConfigureAwait(false);
+                    await Discord.ApiClient.SendVoiceStateUpdateAsync(_voiceStateUpdateParams).ConfigureAwait(false);
                     return null;
 #pragma warning restore IDISP001
                 }
@@ -1093,7 +1103,7 @@ namespace Discord.WebSocket
 #pragma warning restore IDISP003
                 }
 
-                await Discord.ApiClient.SendVoiceStateUpdateAsync(Id, channelId, selfDeaf, selfMute).ConfigureAwait(false);
+                await Discord.ApiClient.SendVoiceStateUpdateAsync(_voiceStateUpdateParams).ConfigureAwait(false);
             }
             catch
             {
@@ -1140,7 +1150,38 @@ namespace Discord.WebSocket
             await Discord.ApiClient.SendVoiceStateUpdateAsync(Id, null, false, false).ConfigureAwait(false);
             _audioClient?.Dispose();
             _audioClient = null;
+            _voiceStateUpdateParams = null;
         }
+
+        internal async Task ModifyAudioAsync(ulong channelId, Action<AudioChannelProperties> func, RequestOptions options)
+        {
+            await _audioLock.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                await ModifyAudioInternalAsync(channelId, func, options).ConfigureAwait(false);
+            }
+            finally
+            {
+                _audioLock.Release();
+            }
+        }
+
+        private async Task ModifyAudioInternalAsync(ulong channelId, Action<AudioChannelProperties> func, RequestOptions options)
+        {
+            if (_voiceStateUpdateParams == null || _voiceStateUpdateParams.ChannelId != channelId)
+                throw new InvalidOperationException("Cannot modify properties of not connected audio channel");
+
+            var props = new AudioChannelProperties();
+            func(props);
+
+            if (props.SelfDeaf.IsSpecified)
+                _voiceStateUpdateParams.SelfDeaf = props.SelfDeaf.Value;
+            if (props.SelfMute.IsSpecified)
+                _voiceStateUpdateParams.SelfMute = props.SelfMute.Value;
+
+            await Discord.ApiClient.SendVoiceStateUpdateAsync(_voiceStateUpdateParams, options).ConfigureAwait(false);
+        }
+
         internal async Task FinishConnectAudio(string url, string token)
         {
             //TODO: Mem Leak: Disconnected/Connected handlers arent cleaned up

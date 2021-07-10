@@ -58,6 +58,11 @@ namespace Discord
             throw new NotImplementedException();
         }
 
+        public Task ModifyAsync(Action<AudioChannelProperties> func, RequestOptions options)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<ICategoryChannel> GetCategoryAsync(CacheMode mode = CacheMode.AllowDownload, RequestOptions options = null)
         {
             throw new NotImplementedException();

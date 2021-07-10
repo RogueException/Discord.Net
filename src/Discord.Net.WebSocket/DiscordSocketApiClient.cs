@@ -284,7 +284,6 @@ namespace Discord.API
         }
         public async Task SendVoiceStateUpdateAsync(ulong guildId, ulong? channelId, bool selfDeaf, bool selfMute, RequestOptions options = null)
         {
-            options = RequestOptions.CreateOrClone(options);
             var payload = new VoiceStateUpdateParams
             {
                 GuildId = guildId,
@@ -292,6 +291,11 @@ namespace Discord.API
                 SelfDeaf = selfDeaf,
                 SelfMute = selfMute
             };
+            await SendGatewayAsync(GatewayOpCode.VoiceStateUpdate, payload, options: options).ConfigureAwait(false);
+        }
+        public async Task SendVoiceStateUpdateAsync(VoiceStateUpdateParams payload, RequestOptions options = null)
+        {
+            options = RequestOptions.CreateOrClone(options);
             await SendGatewayAsync(GatewayOpCode.VoiceStateUpdate, payload, options: options).ConfigureAwait(false);
         }
         public async Task SendGuildSyncAsync(IEnumerable<ulong> guildIds, RequestOptions options = null)

@@ -41,6 +41,11 @@ namespace Discord
             throw new NotImplementedException();
         }
 
+        public Task ModifyAsync(Action<AudioChannelProperties> func, RequestOptions options)
+        {
+            throw new NotImplementedException();
+        }
+
         public IDisposable EnterTypingState(RequestOptions options = null)
         {
             throw new NotImplementedException();
