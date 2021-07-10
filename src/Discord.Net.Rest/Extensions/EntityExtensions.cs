@@ -70,6 +70,7 @@ namespace Discord.Rest
         }
         public static API.AllowedMentions ToModel(this AllowedMentions entity)
         {
+            if (entity == null) return null;
             return new API.AllowedMentions()
             {
                 Parse = entity.AllowedTypes?.EnumerateMentionTypes().ToArray(),
