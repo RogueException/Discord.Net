@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Discord.Commands
@@ -44,8 +45,10 @@ namespace Discord.Commands
             {
                 case TokenType.Bot:
                     var application = await context.Client.GetApplicationInfoAsync().ConfigureAwait(false);
-                    if (context.User.Id != application.Owner.Id)
+
+                    if (application.Team?.TeamMembers.All(t => t.User.Id != context.User.Id) ?? context.User.Id != application.Owner.Id)
                         return PreconditionResult.FromError(ErrorMessage ?? "Command can only be run by the owner of the bot.");
+
                     return PreconditionResult.FromSuccess();
                 default:
                     return PreconditionResult.FromError($"{nameof(RequireOwnerAttribute)} is not supported by this {nameof(TokenType)}.");
