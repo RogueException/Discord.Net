@@ -619,7 +619,7 @@ namespace Discord
         ///     A task that represents the asynchronous creation operation. The task result contains the newly created
         ///     category channel.
         /// </returns>
-        Task<ICategoryChannel> CreateCategoryAsync(string name, Action<GuildChannelProperties> func = null, RequestOptions options = null);
+        Task<ICategoryChannel> CreateCategoryChannelAsync(string name, Action<GuildChannelProperties> func = null, RequestOptions options = null);
 
         /// <summary>
         ///     Gets a collection of all the voice regions this guild can access.
